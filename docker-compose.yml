@@ -1,0 +1,20 @@
+# File: docker-compose.yml
+version: '3.8'
+
+services:
+  netkrak:
+    build:
+      context: .
+    env_file:
+      - .env
+    # Host networking is required to access the host's WiFi interfaces.
+    network_mode: "host"
+    # Add specific capabilities instead of full privileged mode for better security.
+    # NET_ADMIN: Allows configuring network interfaces (e.g., monitor mode).
+    # NET_RAW: Allows use of raw sockets for packet sniffing and injection.
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./logs:/app/logs
+      - ./captures:/app/captures

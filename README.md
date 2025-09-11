@@ -1,387 +1,238 @@
-# net.krak v2.0 - WiFi Penetration Testing Suite
+# Network Scanner and ARP Spoofing Tool
 
-A comprehensive, hardened WiFi penetration testing suite with enhanced attack vectors, improved performance, and a modern web-based dashboard.
+A comprehensive Python tool for network analysis, device discovery, ARP spoofing, and packet sniffing. This tool is designed for educational purposes and authorized network testing.
 
-## 🚀 Features
+## ⚠️ WARNING
 
-### Enhanced Attack Vectors
-- **Deauthentication Attacks** - Forcefully disconnect clients from target APs
-- **Handshake Capture** - Capture WPA/WPA2 handshakes for offline cracking
-- **Evil Twin AP** - Create rogue access points to trick clients
-- **Credential Capture** - Monitor and capture login credentials
-- **WPS PIN Attacks** - Brute force WPS PINs using reaver/bully
-- **Fragmentation Attacks** - Exploit fragmentation vulnerabilities
+**This tool is for educational and authorized testing purposes only.**
+- Only use on networks you own or have explicit written permission to test
+- Unauthorized use may violate laws and terms of service
+- The authors are not responsible for any misuse of this tool
 
-### Advanced Scanning
-- **Multi-method Scanning** - Scapy and airodump-ng support
-- **Real-time Network Discovery** - Live network monitoring
-- **Client Detection** - Identify connected devices
-- **Signal Strength Analysis** - RSSI monitoring and analysis
-- **Security Protocol Detection** - WEP, WPA, WPA2, WPA3 identification
+## Features
 
-### Modern Dashboard
-- **Holographic UI** - Futuristic, responsive web interface
-- **Real-time Monitoring** - Live status updates and activity logs
-- **Attack Management** - Visual attack vector selection and execution
-- **System Status** - Comprehensive system health monitoring
-- **Mobile Responsive** - Works on desktop and mobile devices
+- **Network Discovery**: Scan local networks to find active devices using ARP requests
+- **Device Information**: Gather hostname and MAC vendor information for discovered devices
+- **ARP Spoofing**: Perform ARP spoofing attacks for network control and analysis
+- **Packet Sniffing**: Real-time packet capture and analysis
+- **Comprehensive Logging**: Detailed logging of all activities
+- **Interactive Interface**: User-friendly command-line interface
+- **Threading Support**: Non-blocking operations for concurrent tasks
 
-### Enhanced Security
-- **Authorization Checks** - Legal compliance and safety measures
-- **Process Management** - Secure process isolation and cleanup
-- **Input Validation** - Comprehensive parameter validation
-- **Error Handling** - Robust error handling and recovery
-- **Audit Logging** - Detailed JSON-structured logging
-
-## 📋 Requirements
+## Prerequisites
 
 ### System Requirements
-- Linux (Ubuntu 20.04+ recommended)
-- Python 3.7+
-- 2GB+ RAM
-- 1GB+ free disk space
-- 2+ CPU cores
-- Root privileges for network operations
+- Linux operating system (recommended)
+- Python 3.7 or higher
+- Root/administrator privileges (required for raw socket operations)
 
-### Hardware Requirements
-- WiFi adapter supporting monitor mode
-- Compatible wireless drivers
-- Sufficient antenna range for target networks
+### System Dependencies
+Install the following system packages:
 
-### Software Dependencies
-- aircrack-ng suite
-- reaver (for WPS attacks)
-- bully (alternative WPS tool)
-- iw (wireless tools)
-- net-tools
-- Docker (optional)
-
-## 🛠️ Installation
-
-> **📋 Installation Matrix**: For detailed installation instructions across different environments, see [INSTALLATION_MATRIX.md](INSTALLATION_MATRIX.md)
-
-### Quick Start (Docker)
-
-#### Docker Compose (Recommended)
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd net.krak
-
-# Build and run with Docker Compose
-sudo docker-compose up -d
-
-# Access the dashboard
-open http://localhost:5000
-```
-
-#### Docker Run (Manual)
-For full functionality, use these specific flags:
-```bash
-# Full functionality with all capabilities
-docker run -it --rm \
-  --cap-add=NET_ADMIN --cap-add=NET_RAW \
-  --device /dev/net/tun \
-  --network host \
-  -v /path/to/captures:/app/captures \
-  -v /var/run/dbus:/var/run/dbus \
-  --name netkrak netkrak:latest
-
-# Alternative without --network host (limited functionality)
-docker run -it --rm \
-  --cap-add=NET_ADMIN --cap-add=NET_RAW \
-  --device /dev/net/tun \
-  -v /path/to/captures:/app/captures \
-  -v /var/run/dbus:/var/run/dbus \
-  --name netkrak netkrak:latest
-```
-
-**Important Docker Flags Explained:**
-- `--cap-add=NET_ADMIN --cap-add=NET_RAW`: Required for wireless interface management and packet capture
-- `--device /dev/net/tun`: Access to TUN/TAP devices for network operations
-- `--network host`: **Required for many wireless operations** - allows container to see host network interfaces
-- `-v /path/to/captures:/app/captures`: Persistent storage for captured handshakes and data
-- `-v /var/run/dbus:/var/run/dbus`: Access to system D-Bus for hardware management
-
-**Why --network host is required:**
-The `--network host` flag is essential for wireless penetration testing because:
-- Wireless interfaces (wlan0, wlan0mon) are typically only visible on the host network
-- Many wireless tools (airodump-ng, aircrack-ng) require direct access to physical interfaces
-- Monitor mode operations need raw access to the host's network stack
-- If you must avoid `--network host`, you'll need to manually map hardware interfaces using `--device` flags
-
-### Manual Installation
-```bash
-# Install system dependencies
+# Ubuntu/Debian
 sudo apt-get update
-sudo apt-get install -y aircrack-ng reaver bully iw net-tools
+sudo apt-get install python3-dev libpcap-dev tcpdump net-tools
 
-# Install Python dependencies
-pip install -r requirements.txt
+# CentOS/RHEL/Fedora
+sudo yum install python3-devel libpcap-devel tcpdump net-tools
+# or for newer versions:
+sudo dnf install python3-devel libpcap-devel tcpdump net-tools
 
-# Run the application
-sudo python3 dashboard_api.py
+# Arch Linux
+sudo pacman -S python libpcap tcpdump net-tools
 ```
 
-### Desktop Shortcuts
+## Installation
+
+1. **Clone or download the repository:**
+   ```bash
+   git clone <repository-url>
+   cd network-scanner
+   ```
+
+2. **Install Python dependencies:**
+   ```bash
+   pip3 install -r requirements.txt
+   ```
+
+3. **Make the script executable:**
+   ```bash
+   chmod +x network_scanner.py
+   ```
+
+## Configuration
+
+Before running the tool, you must configure the network parameters in the `main()` function:
+
+```python
+# Configuration - MODIFY THESE VALUES FOR YOUR NETWORK
+ip_range = "192.168.1.0/24"        # Your network range
+router_ip = "192.168.1.1"          # Your router's IP address
+router_mac = "00:00:00:00:00:00"   # Your router's MAC address
+attacker_ip = "192.168.1.2"        # Your machine's IP address
+interface = "eth0"                  # Your network interface
+```
+
+### Finding Your Network Configuration
+
+1. **Find your network interface:**
+   ```bash
+   ip link show
+   # or
+   ifconfig
+   ```
+
+2. **Find your IP range:**
+   ```bash
+   ip route show
+   # Look for your local network (e.g., 192.168.1.0/24)
+   ```
+
+3. **Find your router's IP and MAC:**
+   ```bash
+   ip route | grep default
+   # Then ping the router and check ARP table:
+   ping <router_ip>
+   arp -a | grep <router_ip>
+   ```
+
+## Usage
+
+### Basic Usage
+
+Run the script with root privileges:
+
 ```bash
-# Install desktop shortcuts
-./setup_desktop.sh
-
-# Or run manually
-./start_netkrak.sh    # Start the suite
-./stop_netkrak.sh     # Stop the suite
+sudo python3 network_scanner.py
 ```
 
-## 🎯 Usage
+### Interactive Commands
 
-### Web Dashboard
-1. Open your browser to `http://localhost:5000`
-2. Enter your WiFi interface (e.g., `wlan0mon`)
-3. Click "SCAN NETWORKS" to discover targets
-4. Select a target network
-5. Choose attack vectors
-6. Click "EXECUTE ATTACK" and confirm
+Once the tool starts, you'll see an interactive menu:
 
-### Command Line Interface
-```bash
-# Run system diagnostics (NEW!)
-sudo python3 orchestrator.py diagnostics
+1. **Enter IP address**: Start ARP spoofing and packet sniffing for a specific device
+2. **Enter 'scan'**: Rescan the network for devices
+3. **Enter 'list'**: Display the current list of discovered devices
+4. **Enter 'exit'**: Quit the program
 
-# List available interfaces
-sudo python3 orchestrator.py list-interfaces
+### Example Session
 
-# Scan for networks
-sudo python3 orchestrator.py scan wlan0mon --scan-time 30
+```
+============================================================
+NETWORK SCANNER AND ARP SPOOFING TOOL
+============================================================
+WARNING: This tool is for educational purposes only!
+Only use on networks you own or have permission to test.
+============================================================
+Scanning network...
+Found 5 active devices
 
-# Execute attacks
-sudo python3 orchestrator.py attack wlan0mon \
-    --bssid "00:11:22:33:44:55" \
-    --ssid "TargetNetwork" \
-    --channel 6 \
-    --attack-type deauth \
-    --authorized
+================================================================================
+DISCOVERED DEVICES
+================================================================================
+IP Address       MAC Address         Hostname             Vendor                   
+--------------------------------------------------------------------------------
+192.168.1.1      aa:bb:cc:dd:ee:ff   router.local         Cisco Systems, Inc.      
+192.168.1.2      ff:ee:dd:cc:bb:aa   laptop.local         Apple, Inc.              
+192.168.1.3      11:22:33:44:55:66   phone.local          Samsung Electronics Co.  
+192.168.1.4      77:88:99:aa:bb:cc   desktop.local        Intel Corporate          
+192.168.1.5      dd:ee:ff:00:11:22   tablet.local         Amazon Technologies Inc. 
+================================================================================
 
-# Get system status
-sudo python3 orchestrator.py status
+============================================================
+CONTROL OPTIONS:
+1. Enter IP address to control (ARP spoof + sniff)
+2. Enter 'scan' to rescan network
+3. Enter 'list' to show devices again
+4. Enter 'exit' to quit
+============================================================
 
-# Clean up processes
-sudo python3 orchestrator.py cleanup
+Enter your choice: 192.168.1.3
+
+Controlling 192.168.1.3...
+Starting ARP spoofing and packet sniffing...
+Press Ctrl+C to stop and return to menu
+IP Packet: 192.168.1.3 -> 8.8.8.8 (Protocol: 1)
+ARP Packet: 192.168.1.1 -> 192.168.1.3 (Op: 2)
 ```
 
-### API Endpoints
-```bash
-# System information
-curl http://localhost:5000/system/info
+## Features Explained
 
-# Scan networks
-curl "http://localhost:5000/scan?interface=wlan0mon&scan_time=15"
+### Network Scanning
+- Uses ARP requests to discover active devices on the network
+- Provides IP address, MAC address, hostname, and vendor information
+- Non-intrusive scanning method
 
-# Execute attack
-curl -X POST http://localhost:5000/attack \
-    -H "Content-Type: application/json" \
-    -d '{"interface":"wlan0mon","bssid":"00:11:22:33:44:55","ssid":"Target","attack_type":"deauth"}'
+### ARP Spoofing
+- Performs man-in-the-middle attacks by spoofing ARP responses
+- Redirects traffic between target and gateway through your machine
+- Enables traffic interception and analysis
 
-# Stop attacks
-curl -X POST http://localhost:5000/attack/stop
+### Packet Sniffing
+- Captures and displays network packets in real-time
+- Shows IP and ARP packet information
+- Useful for network analysis and monitoring
 
-# Get logs
-curl http://localhost:5000/logs
-```
+### Logging
+- All activities are logged to `network_scan.log`
+- Includes timestamps and detailed information
+- Useful for analysis and debugging
 
-## 🔧 Configuration
-
-### Environment Variables
-```bash
-export NETKRAK_LOG_FILE="/path/to/logs/netkrak.jsonlog"
-export PYTHONPATH="/path/to/netkrak"
-```
-
-### Configuration File
-Create `.netkrak_config.json`:
-```json
-{
-  "max_scan_time": 300,
-  "max_attack_duration": 3600,
-  "auto_cleanup": true,
-  "log_level": "INFO",
-  "safety_checks": true
-}
-```
-
-## 🧪 Testing
-
-### Run Test Suite
-```bash
-# Run comprehensive tests
-python3 test_comprehensive.py
-
-# Run specific test modules
-python3 -m unittest test_attacks.py
-python3 -m unittest test_scanner.py
-python3 -m unittest test_orchestrator.py
-```
-
-### Performance Optimization
-```bash
-# Run system optimization
-python3 optimize.py
-
-# Benchmark performance
-python3 -c "from optimize import NetKrakOptimizer; NetKrakOptimizer().benchmark_performance()"
-```
-
-## 📊 Monitoring
-
-### Real-time Monitoring
-The dashboard provides real-time monitoring of:
-- Network discovery status
-- Active attack processes
-- System resource usage
-- Error logs and warnings
-- Performance metrics
-
-### Log Analysis
-Logs are stored in JSON format for easy analysis:
-```bash
-# View recent logs
-tail -f logs/netkrak.jsonlog | jq .
-
-# Filter by event type
-grep "attack_start" logs/netkrak.jsonlog | jq .
-```
-
-## 🛡️ Security & Legal
-
-### Legal Compliance
-- **Authorization Required** - All attacks require explicit authorization
-- **Target Confirmation** - Interactive confirmation for attack targets
-- **Audit Logging** - Comprehensive logging of all activities
-- **Safety Checks** - Built-in safety measures and warnings
-
-### Security Features
-- **Process Isolation** - Attacks run in isolated processes
-- **Input Validation** - Comprehensive parameter validation
-- **Error Handling** - Secure error handling and recovery
-- **Resource Limits** - Memory and CPU usage limits
-
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
-#### Interface Not Found
-```bash
-# Check available interfaces
-iwconfig
-ip link show
+1. **Permission Denied Error:**
+   ```bash
+   # Solution: Run with sudo
+   sudo python3 network_scanner.py
+   ```
 
-# Set interface to monitor mode
-sudo airmon-ng start wlan0
+2. **No Devices Found:**
+   - Check your network configuration
+   - Ensure you're on the correct network
+   - Verify the IP range is correct
+
+3. **Interface Not Found:**
+   - Check available interfaces: `ip link show`
+   - Update the interface parameter in the script
+
+4. **Import Errors:**
+   - Install missing dependencies: `pip3 install -r requirements.txt`
+   - Install system dependencies (see Prerequisites)
+
+### Debug Mode
+
+Enable verbose logging by modifying the logging level:
+
+```python
+logging.basicConfig(
+    filename='network_scan.log', 
+    level=logging.DEBUG,  # Change from INFO to DEBUG
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 ```
 
-#### Permission Denied
-```bash
-# Ensure running as root
-sudo python3 dashboard_api.py
+## Legal and Ethical Considerations
 
-# Check capabilities
-sudo setcap cap_net_raw,cap_net_admin+eip /usr/bin/python3
-```
+- **Authorization**: Only use on networks you own or have explicit permission to test
+- **Legal Compliance**: Ensure compliance with local laws and regulations
+- **Ethical Use**: Use responsibly and for legitimate purposes only
+- **Documentation**: Keep records of authorized testing activities
 
-#### No Networks Found
-```bash
-# Verify monitor mode
-iwconfig wlan0mon
+## Contributing
 
-# Check interface status
-ip link show wlan0mon
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-# Test with airodump-ng
-sudo airodump-ng wlan0mon
-```
+## License
 
-### Performance Issues
-```bash
-# Run optimization
-python3 optimize.py
+This project is for educational purposes only. Use at your own risk and ensure compliance with applicable laws and regulations.
 
-# Check system resources
-htop
-iostat -x 1
+## Disclaimer
 
-# Monitor network usage
-iftop -i wlan0mon
-```
-
-## 📈 Performance
-
-### Optimization Features
-- **Multi-threading** - Parallel processing for better performance
-- **Memory Management** - Efficient memory usage and garbage collection
-- **Process Pooling** - Reusable process pools for external tools
-- **Caching** - Intelligent caching of scan results
-- **Resource Limits** - Configurable resource usage limits
-
-### Benchmarks
-Typical performance on modern hardware:
-- Network scan: 15-30 seconds for 50+ networks
-- Attack execution: <1 second startup time
-- Memory usage: 50-200MB depending on activity
-- CPU usage: 10-50% during active scanning
-
-## 🤝 Contributing
-
-### Development Setup
-```bash
-# Install development dependencies
-pip install -r requirements-dev.txt
-
-# Run tests
-python3 test_comprehensive.py
-
-# Format code
-black *.py
-
-# Lint code
-flake8 *.py
-```
-
-### Code Style
-- Follow PEP 8 guidelines
-- Use type hints where appropriate
-- Document all public functions
-- Write comprehensive tests
-- Use meaningful variable names
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## ⚠️ Disclaimer
-
-This software is for educational and authorized testing purposes only. Users are responsible for ensuring they have proper authorization before testing any networks. The authors are not responsible for any misuse of this software.
-
-## 🆘 Support
-
-For support and questions:
-- Check the troubleshooting section
-- Review the test suite for examples
-- Examine the log files for error details
-- Ensure all dependencies are properly installed
-
-## 🔄 Changelog
-
-### v2.0.0
-- Complete rewrite with enhanced security
-- New attack vectors (WPS, fragmentation)
-- Modern holographic dashboard
-- Improved performance and reliability
-- Comprehensive test suite
-- Desktop shortcut integration
-- Real-time monitoring system
-
-### v1.0.0
-- Initial release
-- Basic attack vectors
-- Simple web interface
-- Command-line interface
+The authors and contributors of this tool are not responsible for any misuse, damage, or legal issues arising from the use of this software. Users are solely responsible for ensuring they have proper authorization before using this tool on any network.

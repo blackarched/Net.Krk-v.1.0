@@ -1,11 +1,13 @@
 version: '3.8'
 
 services:
-  netkrak:
+  # Full functionality with all pentest tools
+  netkrak-full:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: netkrak
+      target: full
+    container_name: netkrak-full
     env_file:
       - .env
     # Host networking is required to access the host's WiFi interfaces
@@ -19,6 +21,7 @@ services:
       - ./logs:/app/logs
       - ./captures:/app/captures
       - /proc/sys/net/ipv4/ip_forward:/proc/sys/net/ipv4/ip_forward:ro
+      - /var/run/dbus:/var/run/dbus
     environment:
       - PYTHONPATH=/app
       - NETKRAK_LOG_FILE=/app/logs/netkrak.jsonlog
@@ -30,5 +33,38 @@ services:
       retries: 3
       start_period: 40s
     labels:
-      - "com.netkrak.description=WiFi Penetration Testing Suite"
+      - "com.netkrak.description=WiFi Penetration Testing Suite (Full)"
       - "com.netkrak.version=2.0.0"
+      - "com.netkrak.mode=full"
+
+  # Safe demo mode without pentest tools
+  netkrak-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: demo
+    container_name: netkrak-demo
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - NETKRAK_LOG_FILE=/app/logs/netkrak.jsonlog
+      - NETKRAK_DEMO_MODE=true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.netkrak.description=WiFi Penetration Testing Suite (Demo)"
+      - "com.netkrak.version=2.0.0"
+      - "com.netkrak.mode=demo"
+
+  # Default service (points to full functionality)
+  netkrak:
+    extends:
+      service: netkrak-full

@@ -2,8 +2,10 @@
 Version=1.0
 Name=Stop net.krak
 Comment=Stop the net.krak WiFi pentesting suite
-Exec=/path/to/your/netkrak/project/stop_netkrak.sh
+Exec=/workspace/stop_netkrak.sh
 Icon=network-offline
 Terminal=false
 Type=Application
 Categories=System;Security;
+Path=/workspace
+StartupNotify=true

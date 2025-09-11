@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>net.krak - WiFi Penetration Suite</title>
+    <title>net.krak - WiFi Penetration Suite v2.0</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
         
         * {
             margin: 0;
@@ -138,6 +138,12 @@
             animation: scanBeacon 0.6s ease-in-out infinite;
         }
 
+        .status-beacon.attacking {
+            background: #ff0000;
+            box-shadow: 0 0 20px #ff0000, 0 0 40px rgba(255,0,0,0.5);
+            animation: attackBeacon 0.3s ease-in-out infinite;
+        }
+
         @keyframes beaconPulse {
             0%, 100% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.1); opacity: 0.8; }
@@ -146,6 +152,11 @@
         @keyframes scanBeacon {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.3); }
+        }
+
+        @keyframes attackBeacon {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.5); }
         }
 
         /* Holographic matrices */
@@ -263,7 +274,7 @@
 
         /* Network discovery list */
         .network-discovery {
-            height: calc(100% - 80px); /* Adjust height to fit controls */
+            height: calc(100% - 80px);
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: rgba(0,255,255,0.6) rgba(0,0,0,0.3);
@@ -308,6 +319,12 @@
         .network-meta {
             font-size: 9px;
             color: rgba(0,255,255,0.7);
+        }
+
+        .network-rssi {
+            font-size: 9px;
+            color: rgba(0,255,0,0.7);
+            margin-top: 2px;
         }
 
         /* Router identification display */
@@ -453,6 +470,11 @@
             color: #ffff00;
         }
 
+        .ctrl-status {
+            border-color: rgba(0,255,0,0.6);
+            color: #00ff00;
+        }
+
         /* Activity log stream */
         .activity-stream {
             height: 100%;
@@ -512,6 +534,19 @@
             padding: 4px 0;
         }
 
+        /* Status indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .status-offline { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .status-warning { background: #ffff00; box-shadow: 0 0 10px #ffff00; }
+
         /* Scrollbar styling */
         ::-webkit-scrollbar {
             width: 6px;
@@ -531,7 +566,7 @@
             background: linear-gradient(45deg, #ff00ff, #00ffff);
         }
 
-        /* Added Styles for Confirmation Modal */
+        /* Confirmation Modal */
         .modal-backdrop {
             position: fixed;
             top: 0;
@@ -541,10 +576,11 @@
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(10px);
             z-index: 1000;
-            display: none; /* Initially hidden */
+            display: none;
             align-items: center;
             justify-content: center;
         }
+
         .modal-content {
             background: linear-gradient(135deg, rgba(10, 0, 0, 0.9) 0%, rgba(30, 0, 0, 0.95) 100%);
             border: 1px solid rgba(255, 0, 0, 0.6);
@@ -555,10 +591,12 @@
             box-shadow: 0 0 40px rgba(255, 0, 0, 0.4);
             animation: modalFadeIn 0.5s ease-out;
         }
+
         @keyframes modalFadeIn {
             from { opacity: 0; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1); }
         }
+
         .modal-header {
             font-size: 18px;
             color: #ff0000;
@@ -566,22 +604,48 @@
             margin-bottom: 20px;
             text-transform: uppercase;
         }
+
         .modal-body p {
             margin-bottom: 15px;
             font-size: 12px;
             line-height: 1.6;
         }
+
         .modal-body code {
             color: #ffff00;
             background: rgba(255, 255, 0, 0.1);
             padding: 2px 5px;
             border-radius: 3px;
         }
+
         .modal-footer {
             margin-top: 30px;
             display: flex;
             justify-content: flex-end;
             gap: 10px;
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #00ffff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .neural-architecture {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto auto;
+            }
         }
     </style>
 </head>
@@ -591,7 +655,7 @@
 
     <div class="neural-architecture">
         <div class="command-header">
-            <div class="exploit-logo">net.krak</div>
+            <div class="exploit-logo">net.krak v2.0</div>
             <div class="interface-status">
                 <div class="status-beacon" id="statusBeacon"></div>
                 <span id="statusText">AWAITING_INTERFACE</span>
@@ -601,9 +665,13 @@
         <div class="holo-matrix matrix-scanner">
             <div class="matrix-header" style="color: #00ffff;">Network Discovery</div>
             <div class="network-discovery" id="networkDiscovery">
-                </div>
+                <div class="log-entry info">System Initialized. Enter WiFi interface and begin scan.</div>
+            </div>
             <div class="command-controls">
-                <button class="ctrl-command ctrl-scan" onclick="scanNetworks()">SCAN NETWORKS</button>
+                <button class="ctrl-command ctrl-scan" onclick="scanNetworks()" id="scanBtn">
+                    <span id="scanText">SCAN NETWORKS</span>
+                </button>
+                <button class="ctrl-command ctrl-status" onclick="getSystemStatus()">STATUS</button>
             </div>
         </div>
 
@@ -626,9 +694,22 @@
                     <div class="vector-name">Evil Twin AP</div>
                     <div class="vector-description">Create a rogue AP with the same name to trick clients.</div>
                 </div>
+                <div class="attack-vector" onclick="toggleAttackVector(this)" data-vector="credential">
+                    <div class="vector-name">Credential Capture</div>
+                    <div class="vector-description">Monitor and capture login credentials from clients.</div>
+                </div>
+                <div class="attack-vector" onclick="toggleAttackVector(this)" data-vector="wps">
+                    <div class="vector-name">WPS PIN Attack</div>
+                    <div class="vector-description">Brute force WPS PIN to gain network access.</div>
+                </div>
+                <div class="attack-vector" onclick="toggleAttackVector(this)" data-vector="fragmentation">
+                    <div class="vector-name">Fragmentation Attack</div>
+                    <div class="vector-description">Exploit fragmentation vulnerabilities in WEP/WPA.</div>
+                </div>
             </div>
             <div class="command-controls">
-                <button class="ctrl-command ctrl-attack" onclick="executeAttack()">EXECUTE ATTACK</button>
+                <button class="ctrl-command ctrl-attack" onclick="executeAttack()" id="attackBtn">EXECUTE ATTACK</button>
+                <button class="ctrl-command ctrl-stop" onclick="stopAllAttacks()" id="stopBtn">STOP ALL</button>
             </div>
         </div>
 
@@ -658,6 +739,12 @@
                     <label class="config-label">Attack Status:</label>
                     <div class="config-value" id="attackStatus">Idle</div>
                 </div>
+                <div class="config-field">
+                    <label class="config-label">System Status:</label>
+                    <div class="config-value" id="systemStatus">
+                        <span class="status-indicator status-offline"></span>Offline
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -682,13 +769,13 @@
     <script>
         // --- Global State ---
         let isScanning = false;
+        let isAttacking = false;
         let selectedTarget = null;
         let activeVectors = [];
+        let systemStatus = {};
 
         /**
          * Adds a new entry to the on-screen activity log.
-         * @param {string} type - The type of log (info, success, warning, error, attack).
-         * @param {string} message - The log message to display.
          */
         function addLogEntry(type, message) {
             const stream = document.getElementById('activityStream');
@@ -701,7 +788,48 @@
         }
 
         /**
-         * Initiates a network scan by calling the backend API.
+         * Updates the status beacon and text
+         */
+        function updateStatus(status, text) {
+            const beacon = document.getElementById('statusBeacon');
+            const statusText = document.getElementById('statusText');
+            
+            beacon.className = `status-beacon ${status}`;
+            statusText.textContent = text;
+        }
+
+        /**
+         * Gets system status from the API
+         */
+        async function getSystemStatus() {
+            try {
+                const response = await fetch('/system/info');
+                if (response.ok) {
+                    systemStatus = await response.json();
+                    updateSystemStatusDisplay();
+                    addLogEntry('success', 'System status updated');
+                } else {
+                    addLogEntry('error', 'Failed to get system status');
+                }
+            } catch (e) {
+                addLogEntry('error', `System status error: ${e.message}`);
+            }
+        }
+
+        /**
+         * Updates the system status display
+         */
+        function updateSystemStatusDisplay() {
+            const systemStatusEl = document.getElementById('systemStatus');
+            if (systemStatus.interfaces && systemStatus.interfaces.length > 0) {
+                systemStatusEl.innerHTML = '<span class="status-indicator status-online"></span>Online';
+            } else {
+                systemStatusEl.innerHTML = '<span class="status-indicator status-warning"></span>No Interfaces';
+            }
+        }
+
+        /**
+         * Enhanced network scanning with better error handling
          */
         async function scanNetworks() {
             const iface = document.getElementById('wifiInterface').value;
@@ -710,19 +838,21 @@
                 return;
             }
             if (isScanning) return;
-            isScanning = true;
-
-            const beacon = document.getElementById('statusBeacon');
-            const statusText = document.getElementById('statusText');
-            const discoveryContainer = document.getElementById('networkDiscovery');
             
-            beacon.classList.add('scanning');
-            statusText.textContent = 'SCANNING...';
+            isScanning = true;
+            updateStatus('scanning', 'SCANNING...');
+            
+            const scanBtn = document.getElementById('scanBtn');
+            const scanText = document.getElementById('scanText');
+            scanBtn.disabled = true;
+            scanText.innerHTML = '<div class="loading"></div> SCANNING...';
+            
+            const discoveryContainer = document.getElementById('networkDiscovery');
             addLogEntry('info', `Initializing network scan on interface ${iface}...`);
             discoveryContainer.innerHTML = '<div class="log-entry info">Scanning... Please wait.</div>';
 
             try {
-                const resp = await fetch(`/scan?interface=${encodeURIComponent(iface)}&scan_time=15`);
+                const resp = await fetch(`/scan?interface=${encodeURIComponent(iface)}&scan_time=15&method=scapy`);
                 if (!resp.ok) {
                     const errData = await resp.json().catch(() => ({error: `Server responded with status: ${resp.status}`}));
                     throw new Error(errData.error || `HTTP error ${resp.status}`);
@@ -738,9 +868,17 @@
                         networkElement.dataset.bssid = net.bssid;
                         networkElement.dataset.channel = net.channel || '';
                         networkElement.dataset.security = net.security || '';
+                        networkElement.dataset.rssi = net.rssi || '';
+                        
+                        let rssiDisplay = '';
+                        if (net.rssi) {
+                            rssiDisplay = `<div class="network-rssi">RSSI: ${net.rssi} dBm</div>`;
+                        }
+                        
                         networkElement.innerHTML = `
                             <div class="network-ssid">${net.ssid || '<em>&lt;hidden&gt;</em>'}</div>
                             <div class="network-meta">BSSID: ${net.bssid} | Chan: ${net.channel || '?'} | Sec: ${net.security || '?'}</div>
+                            ${rssiDisplay}
                         `;
                         networkElement.addEventListener('click', () => selectNetwork(networkElement));
                         discoveryContainer.appendChild(networkElement);
@@ -755,14 +893,14 @@
                 addLogEntry('error', `Scan failed: ${e.message}`);
             } finally {
                 isScanning = false;
-                beacon.classList.remove('scanning');
-                statusText.textContent = 'READY';
+                updateStatus('', 'READY');
+                scanBtn.disabled = false;
+                scanText.textContent = 'SCAN NETWORKS';
             }
         }
 
         /**
          * Handles the selection of a network from the list.
-         * @param {HTMLElement} networkElement - The clicked network element.
          */
         function selectNetwork(networkElement) {
             document.querySelectorAll('.wifi-network.selected').forEach(n => n.classList.remove('selected'));
@@ -772,7 +910,8 @@
                 ssid: networkElement.dataset.ssid,
                 bssid: networkElement.dataset.bssid,
                 channel: networkElement.dataset.channel,
-                security: networkElement.dataset.security
+                security: networkElement.dataset.security,
+                rssi: networkElement.dataset.rssi
             };
 
             document.getElementById('targetBSSID').textContent = selectedTarget.bssid;
@@ -782,7 +921,8 @@
                 <div class="router-details">
                     <strong>SSID:</strong> ${selectedTarget.ssid}<br>
                     <strong>BSSID:</strong> ${selectedTarget.bssid}<br>
-                    <strong>Channel:</strong> ${selectedTarget.channel || 'N/A'}
+                    <strong>Channel:</strong> ${selectedTarget.channel || 'N/A'}<br>
+                    <strong>RSSI:</strong> ${selectedTarget.rssi || 'N/A'} dBm
                 </div>
             `;
             addLogEntry('info', `Target acquired: ${selectedTarget.ssid} (${selectedTarget.bssid})`);
@@ -790,7 +930,6 @@
         
         /**
          * Toggles the active state of an attack vector.
-         * @param {HTMLElement} vectorElement - The clicked attack vector element.
          */
         function toggleAttackVector(vectorElement) {
             const vectorType = vectorElement.dataset.vector;
@@ -841,10 +980,9 @@
         }
 
         /**
-         * The original attack logic, now called only after confirmation.
+         * Enhanced attack execution with better error handling
          */
         async function proceedWithAttack() {
-            // Hide modal first
             document.getElementById('confirmationModal').style.display = 'none';
             
             const iface = document.getElementById('wifiInterface').value;
@@ -853,8 +991,13 @@
                 return;
             }
 
+            isAttacking = true;
+            updateStatus('attacking', 'ATTACKING...');
             document.getElementById('attackStatus').textContent = 'ACTIVE';
             addLogEntry('attack', `Executing attack on ${selectedTarget.ssid} with vectors: [${activeVectors.join(', ').toUpperCase()}]`);
+
+            let successCount = 0;
+            let errorCount = 0;
 
             for (const vector of activeVectors) {
                 try {
@@ -864,6 +1007,7 @@
                         ssid: selectedTarget.ssid,
                         channel: selectedTarget.channel,
                         attack_type: vector,
+                        duration: 300
                     };
                     
                     const resp = await fetch('/attack', {
@@ -873,20 +1017,50 @@
                     });
 
                     const result = await resp.json();
-                    if (resp.ok && result.status) {
+                    if (resp.ok && result.success) {
                         addLogEntry('success', `[${vector.toUpperCase()}] ${result.status}`);
+                        successCount++;
                     } else {
                         throw new Error(result.error || 'Unknown API error');
                     }
                 } catch (e) {
                     addLogEntry('error', `[${vector.toUpperCase()}] Failed: ${e.message}`);
+                    errorCount++;
                 }
             }
             
+            // Update status
             setTimeout(() => {
+                isAttacking = false;
+                updateStatus('', 'READY');
                 document.getElementById('attackStatus').textContent = 'IDLE';
-                 addLogEntry('info', `Attack sequence completed.`);
+                addLogEntry('info', `Attack sequence completed. Success: ${successCount}, Errors: ${errorCount}`);
             }, 2000);
+        }
+
+        /**
+         * Stop all active attacks
+         */
+        async function stopAllAttacks() {
+            try {
+                const resp = await fetch('/attack/stop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                
+                if (resp.ok) {
+                    const result = await resp.json();
+                    addLogEntry('warning', result.status);
+                    isAttacking = false;
+                    updateStatus('', 'READY');
+                    document.getElementById('attackStatus').textContent = 'IDLE';
+                } else {
+                    addLogEntry('error', 'Failed to stop attacks');
+                }
+            } catch (e) {
+                addLogEntry('error', `Stop attacks failed: ${e.message}`);
+            }
         }
 
         /**
@@ -905,10 +1079,17 @@
             }
         }
 
-        // Initialize the dashboard when the DOM is loaded.
-        document.addEventListener('DOMContentLoaded', () => {
+        /**
+         * Initialize the dashboard
+         */
+        function initializeDashboard() {
             initPhotonCascade();
-        });
+            getSystemStatus();
+            addLogEntry('info', 'Dashboard initialized. Ready for operations.');
+        }
+
+        // Initialize the dashboard when the DOM is loaded.
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
     </script>
 </body>
 </html>

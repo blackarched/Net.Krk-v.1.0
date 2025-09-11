@@ -1,6 +1,6 @@
-#### **New File: `utils/logger_config.py`**
-(A new utility for shared, configurable logging)
-```python
+"""
+logger_config.py - Enhanced logging configuration for net.krak
+"""
 import logging
 import os
 import getpass
@@ -17,7 +17,7 @@ def setup_logging():
     log_file_path = os.environ.get("NETKRAK_LOG_FILE")
     if not log_file_path:
         # Default to a 'logs' directory in the project root
-        project_root = Path(__file__).parent.parent
+        project_root = Path(__file__).parent
         log_dir = project_root / "logs"
         log_dir.mkdir(exist_ok=True)
         log_file_path = log_dir / "netkrak.jsonlog"

@@ -1,20 +1,34 @@
-# File: docker-compose.yml
 version: '3.8'
 
 services:
   netkrak:
     build:
       context: .
+      dockerfile: Dockerfile
+    container_name: netkrak
     env_file:
       - .env
-    # Host networking is required to access the host's WiFi interfaces.
+    # Host networking is required to access the host's WiFi interfaces
     network_mode: "host"
-    # Add specific capabilities instead of full privileged mode for better security.
-    # NET_ADMIN: Allows configuring network interfaces (e.g., monitor mode).
-    # NET_RAW: Allows use of raw sockets for packet sniffing and injection.
+    # Add specific capabilities instead of full privileged mode for better security
     cap_add:
       - NET_ADMIN
       - NET_RAW
+      - SYS_ADMIN
     volumes:
       - ./logs:/app/logs
       - ./captures:/app/captures
+      - /proc/sys/net/ipv4/ip_forward:/proc/sys/net/ipv4/ip_forward:ro
+    environment:
+      - PYTHONPATH=/app
+      - NETKRAK_LOG_FILE=/app/logs/netkrak.jsonlog
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.netkrak.description=WiFi Penetration Testing Suite"
+      - "com.netkrak.version=2.0.0"

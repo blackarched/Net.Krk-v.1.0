@@ -1,27 +1,47 @@
-# Use an official Python runtime as a parent image
 FROM python:3.9-slim
 
-# Set the working directory in the container
-WORKDIR /app
-
-# Install system dependencies required for the tool
-# hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
     net-tools \
+    wireless-tools \
     aircrack-ng \
+    reaver \
+    bully \
+    iw \
+    iputils-ping \
+    netcat-openbsd \
+    curl \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file into the container
+# Set working directory
+WORKDIR /app
+
+# Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install any needed packages specified in requirements.txt
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application's code into the container
+# Copy application code
 COPY . .
 
-# Make the entrypoint script executable
-RUN chmod +x ./entrypoint.sh
+# Create necessary directories
+RUN mkdir -p logs captures
 
-# The command to run when the container starts
-ENTRYPOINT ["./entrypoint.sh"]
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV NETKRAK_LOG_FILE=/app/logs/netkrak.jsonlog
+
+# Make scripts executable
+RUN chmod +x *.sh *.py
+
+# Expose port
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
+
+# Default command
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "dashboard_api:app"]

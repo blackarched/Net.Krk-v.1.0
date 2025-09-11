@@ -15,7 +15,7 @@ from scanner import scan_networks, list_wifi_interfaces, get_network_info, get_c
 from attacks import (deauth_attack, capture_handshake, perform_evil_twin, capture_credentials,
                     perform_wps_attack, perform_fragmentation_attack, stop_attack, stop_all_attacks,
                     get_attack_status)
-from logger_config import setup_logging, log_event
+from utils.logger_config import setup_logging, log_event
 
 # Initialize Flask app
 app = Flask(__name__, static_folder='static', template_folder='static')

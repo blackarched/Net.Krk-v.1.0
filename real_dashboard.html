@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Net.Krk Mobile Dashboard - REAL DATA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .title {
+            color: #ff0088;
+            font-size: 2.5em;
+            text-align: center;
+            text-shadow: 0 0 20px #ff0088;
+            margin-bottom: 20px;
+            animation: titlePulse 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes titlePulse {
+            0% { text-shadow: 0 0 20px #ff0088; }
+            100% { text-shadow: 0 0 30px #ff0088, 0 0 40px #ff0088; }
+        }
+        
+        .subtitle {
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+        
+        .status {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            animation: statusGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes statusGlow {
+            0%, 100% { border-color: #00ffff; }
+            50% { border-color: #ff0088; }
+        }
+        
+        .button {
+            background: linear-gradient(45deg, #ff0088, #00ffff);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 0, 136, 0.4);
+        }
+        
+        .button:active {
+            transform: scale(0.95);
+        }
+        
+        .button.scanning {
+            animation: scanPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes scanPulse {
+            0%, 100% { background: linear-gradient(45deg, #ff0088, #00ffff); }
+            50% { background: linear-gradient(45deg, #00ffff, #ff0088); }
+        }
+        
+        .log {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+            animation: logSlide 0.5s ease-out;
+        }
+        
+        @keyframes logSlide {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .log-info { color: #00ffff; }
+        .log-success { color: #00ff00; }
+        .log-warning { color: #ffff00; }
+        .log-error { color: #ff0000; }
+        
+        .network-item {
+            background: rgba(255, 0, 136, 0.1);
+            border: 1px solid #ff0088;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+            animation: networkAppear 0.6s ease-out;
+        }
+        
+        @keyframes networkAppear {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .network-item:hover {
+            background: rgba(255, 0, 136, 0.2);
+            transform: translateX(5px);
+        }
+        
+        .network-ssid {
+            color: #ff0088;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        
+        .network-details {
+            color: #00ffff;
+            font-size: 0.9em;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .signal-bar {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        
+        .signal-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00);
+            transition: width 0.5s ease;
+        }
+        
+        .scanning-indicator {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .scanning-indicator.active {
+            display: block;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #333;
+            border-top: 3px solid #00ffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            color: #ff0088;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            color: #00ffff;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">net.krak</h1>
+        <p class="subtitle">WiFi Penetration Suite v2.0 - REAL DATA</p>
+        
+        <div class="status">
+            <h3>🚀 System Status: ONLINE</h3>
+            <p>Real Network Scanning Active</p>
+        </div>
+        
+        <div style="text-align: center;">
+            <button class="button" id="scanBtn" onclick="scanRealNetworks()">🔍 Scan REAL Networks</button>
+            <button class="button" onclick="testConnection()">Test Connection</button>
+            <button class="button" onclick="showSystemInfo()">System Info</button>
+        </div>
+        
+        <div class="scanning-indicator" id="scanningIndicator">
+            <div class="spinner"></div>
+            <span>Scanning for real WiFi networks...</span>
+        </div>
+        
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-number" id="networkCount">0</div>
+                <div class="stat-label">Networks Found</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="strongestSignal">-100</div>
+                <div class="stat-label">Strongest Signal (dBm)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="hiddenNetworks">0</div>
+                <div class="stat-label">Hidden Networks</div>
+            </div>
+        </div>
+        
+        <div>
+            <h3>📡 Discovered Networks</h3>
+            <div id="networks" style="margin: 20px 0;">
+                <div class="log-entry log-info">Click "Scan REAL Networks" to discover actual WiFi networks</div>
+            </div>
+        </div>
+        
+        <div>
+            <h3>📊 Activity Log</h3>
+            <div id="log" class="log">
+                <div class="log-entry log-info">[INFO] Real data dashboard initialized</div>
+                <div class="log-entry log-success">[SUCCESS] Ready for REAL network scanning</div>
+                <div class="log-entry log-info">[INFO] Click scan button to start</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let isScanning = false;
+        
+        function addLog(type, message) {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${type.toUpperCase()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function updateStats(networks) {
+            const stats = document.getElementById('stats');
+            const networkCount = document.getElementById('networkCount');
+            const strongestSignal = document.getElementById('strongestSignal');
+            const hiddenNetworks = document.getElementById('hiddenNetworks');
+            
+            if (networks.length > 0) {
+                stats.style.display = 'grid';
+                networkCount.textContent = networks.length;
+                
+                const signals = networks.map(n => n.signal).filter(s => s !== undefined);
+                const strongest = Math.max(...signals);
+                strongestSignal.textContent = strongest;
+                
+                const hidden = networks.filter(n => !n.ssid || n.ssid === 'Hidden').length;
+                hiddenNetworks.textContent = hidden;
+            } else {
+                stats.style.display = 'none';
+            }
+        }
+        
+        function displayNetworks(networks) {
+            const container = document.getElementById('networks');
+            container.innerHTML = '';
+            
+            if (networks.length === 0) {
+                container.innerHTML = '<div class="log-entry log-warning">No networks found. Try running scan again or check permissions.</div>';
+                return;
+            }
+            
+            // Sort networks by signal strength (strongest first)
+            networks.sort((a, b) => (b.signal || -100) - (a.signal || -100));
+            
+            networks.forEach(net => {
+                const div = document.createElement('div');
+                div.className = 'network-item';
+                
+                const signalStrength = net.signal || -100;
+                const signalPercent = Math.max(0, Math.min(100, ((signalStrength + 100) / 60) * 100));
+                
+                div.innerHTML = `
+                    <div class="network-ssid">${net.ssid || 'Hidden Network'}</div>
+                    <div class="network-details">
+                        <div><strong>BSSID:</strong> ${net.bssid || 'Unknown'}</div>
+                        <div><strong>Signal:</strong> ${signalStrength}dBm</div>
+                        <div><strong>Channel:</strong> ${net.channel || 'Unknown'}</div>
+                        <div><strong>Security:</strong> ${net.security || 'Unknown'}</div>
+                    </div>
+                    <div class="signal-bar">
+                        <div class="signal-fill" style="width: ${signalPercent}%"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            
+            updateStats(networks);
+        }
+        
+        function scanRealNetworks() {
+            if (isScanning) return;
+            
+            isScanning = true;
+            const scanBtn = document.getElementById('scanBtn');
+            const scanningIndicator = document.getElementById('scanningIndicator');
+            
+            scanBtn.textContent = '🔄 Scanning...';
+            scanBtn.classList.add('scanning');
+            scanningIndicator.classList.add('active');
+            
+            addLog('info', 'Starting REAL network scan...');
+            
+            // Try multiple scanning methods
+            const scanMethods = [
+                '/api/real-scan',
+                '/api/scan-iwlist',
+                '/api/scan-nmcli',
+                '/api/scan-wpa'
+            ];
+            
+            let currentMethod = 0;
+            
+            function tryNextMethod() {
+                if (currentMethod >= scanMethods.length) {
+                    // All methods failed
+                    addLog('error', 'All scanning methods failed. Check permissions.');
+                    resetScanUI();
+                    return;
+                }
+                
+                const method = scanMethods[currentMethod];
+                addLog('info', `Trying method ${currentMethod + 1}/${scanMethods.length}...`);
+                
+                fetch(method)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success' && data.networks.length > 0) {
+                            addLog('success', `Found ${data.networks.length} REAL networks using method ${currentMethod + 1}`);
+                            displayNetworks(data.networks);
+                            resetScanUI();
+                        } else {
+                            currentMethod++;
+                            setTimeout(tryNextMethod, 1000);
+                        }
+                    })
+                    .catch(error => {
+                        addLog('warning', `Method ${currentMethod + 1} failed: ${error.message}`);
+                        currentMethod++;
+                        setTimeout(tryNextMethod, 1000);
+                    });
+            }
+            
+            tryNextMethod();
+        }
+        
+        function resetScanUI() {
+            isScanning = false;
+            const scanBtn = document.getElementById('scanBtn');
+            const scanningIndicator = document.getElementById('scanningIndicator');
+            
+            scanBtn.textContent = '🔍 Scan REAL Networks';
+            scanBtn.classList.remove('scanning');
+            scanningIndicator.classList.remove('active');
+        }
+        
+        function testConnection() {
+            addLog('info', 'Testing connection...');
+            fetch('/api/test')
+                .then(response => response.json())
+                .then(data => {
+                    addLog('success', `Connection test: ${data.message}`);
+                })
+                .catch(error => {
+                    addLog('error', `Connection failed: ${error.message}`);
+                });
+        }
+        
+        function showSystemInfo() {
+            addLog('info', 'Getting system information...');
+            fetch('/api/system')
+                .then(response => response.json())
+                .then(data => {
+                    addLog('success', `Platform: ${data.platform}`);
+                    addLog('info', `Python: ${data.python_version}`);
+                    addLog('info', `Status: ${data.status}`);
+                })
+                .catch(error => {
+                    addLog('error', `System info failed: ${error.message}`);
+                });
+        }
+        
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            if (!isScanning) {
+                addLog('info', 'System heartbeat - ' + new Date().toLocaleTimeString());
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

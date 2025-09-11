@@ -1,158 +1,143 @@
 """
 scanner.py - WiFi scanning and parsing logic for net.krak
 """
-import scapy.all as scapy
-from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11ProbeResp, Dot11Elt
-import subprocess
 import logging
 import shutil
-import re
-import tempfile
-import time
-import csv
-import os
-from pathlib import Path
+import subprocess
 
-def list_wifi_interfaces(logger=None):
-    """
-    Lists available wireless interfaces using iwconfig.
-    """
-    if logger is None:
-        logger = logging.getLogger("scanner")
-    if shutil.which("iwconfig") is None:
-        logger.error("iwconfig not found. Cannot list wireless interfaces.")
-        return []
+import scapy.all as scapy
+from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11Elt, Dot11ProbeResp
+
+
+def set_monitor_mode(interface, logger):
+    """Activates monitor mode on the specified interface using secure subprocess calls."""
+    for tool in ["ifconfig", "iwconfig"]:
+        if shutil.which(tool) is None:
+            logger.error(
+                f"'{tool}' not found. Please install net-tools or equivalent."
+            )
+            return False
     try:
-        proc = subprocess.run(["iwconfig"], capture_output=True, text=True, check=True)
-        # Regex to find interface names like wlan0, wlp3s0, etc.
-        interfaces = re.findall(r"^([a-zA-Z0-9]+)\s+IEEE 802.11", proc.stdout, re.MULTILINE)
-        logger.info(f"Found interfaces: {interfaces}")
-        return interfaces
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        logger.error(f"Error listing wireless interfaces: {e}")
-        return []
+        # Bring interface down before changing mode to prevent issues
+        subprocess.run(
+            ["ifconfig", interface, "down"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        # Set the interface to monitor mode
+        subprocess.run(
+            ["iwconfig", interface, "mode", "monitor"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        # Bring the interface back up
+        subprocess.run(
+            ["ifconfig", interface, "up"], check=True, capture_output=True, text=True
+        )
+        logger.info(f"Successfully set interface '{interface}' to monitor mode.")
+        return True
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to set monitor mode on '{interface}'.")
+        logger.error(f"Command '{e.cmd}' failed with exit code {e.returncode}.")
+        logger.error(f"Stderr: {e.stderr.strip()}")
+        return False
+    except FileNotFoundError:
+        logger.error(
+            f"Command not found. Ensure net-tools are installed and in your PATH."
+        )
+        return False
 
-def scan_networks_airodump(interface, scan_time=15, logger=None):
+
+def scan_networks(interface, scan_time=15, logger=None):
     """
-    Scan for WiFi networks using airodump-ng. More reliable than scapy.
+    Scans for WiFi networks using scapy. Returns a list of dictionaries.
+
+    Args:
+        interface (str): The network interface to use for scanning.
+        scan_time (int): The total duration in seconds to scan for networks.
+        logger (logging.Logger): The logger instance for logging events.
+
+    Returns:
+        list: A list of dictionaries, where each dictionary represents a found network.
     """
     if logger is None:
-        logger = logging.getLogger("scanner")
-    if shutil.which("airodump-ng") is None:
-        logger.error("airodump-ng not found. Cannot scan with this method.")
+        logger = logging.getLogger("netkrak.scanner")
+
+    if not set_monitor_mode(interface, logger):
         return []
 
     networks = {}
-    with tempfile.NamedTemporaryFile(mode='w+', delete=False, prefix='netkrak-scan-', suffix='.csv') as tmpfile:
-        output_prefix = tmpfile.name.replace(".csv", "")
-        # Command to run airodump-ng
-        cmd = ["airodump-ng", "--output-format", "csv", "--write", output_prefix, interface]
-        logger.info(f"Starting airodump-ng scan: {' '.join(cmd)}")
-        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        try:
-            proc.wait(timeout=scan_time)
-        except subprocess.TimeoutExpired:
-            logger.info(f"Scan time of {scan_time}s expired. Terminating airodump-ng.")
-            proc.terminate()
-            time.sleep(2) # Give airodump-ng a moment to write the file
-            proc.kill()
 
-        # airodump-ng creates a file named {prefix}-01.csv
-        csv_path = f"{output_prefix}-01.csv"
-        if not os.path.exists(csv_path):
-            logger.error("airodump-ng did not produce an output file.")
-            return []
+    def handle_packet(pkt):
+        # We only care about beacon and probe response frames
+        if not (pkt.haslayer(Dot11Beacon) or pkt.haslayer(Dot11ProbeResp)):
+            return
 
-        try:
-            with open(csv_path, 'r', errors='ignore') as f:
-                lines = f.read().splitlines()
+        bssid = pkt[Dot11].addr2
+        ssid = None
+        channel = None
+        security = set()
+
+        # Traverse all Dot11Elt layers to find SSID, channel, and security info
+        elt_layer = pkt.getlayer(Dot11Elt)
+        while elt_layer:
+            if elt_layer.ID == 0:  # SSID
                 try:
-                    client_header_index = lines.index('Station MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs')
-                    ap_lines = lines[1:client_header_index]
-                except ValueError:
-                    ap_lines = lines[1:]
+                    # Decode SSID, ignoring errors for malformed names
+                    ssid = elt_layer.info.decode(errors="ignore").strip()
+                except Exception:
+                    pass
+            elif elt_layer.ID == 3:  # DSset (channel)
+                channel = int(elt_layer.info[0])
+            elif elt_layer.ID == 48:  # RSN Information (WPA2/WPA3)
+                security.add("WPA2") # Can be refined for WPA3
+            elif elt_layer.ID == 221 and elt_layer.info.startswith(
+                b"\x00P\xf2\x01\x01\x00"
+            ):  # Vendor Specific (WPA)
+                security.add("WPA")
 
-                csv_reader = csv.reader(ap_lines)
-                for row in csv_reader:
-                    if len(row) >= 14:
-                        bssid = row[0].strip()
-                        privacy = row[5].strip()
-                        channel = row[3].strip()
-                        ssid = row[13].strip()
-                        if bssid and ssid:
-                            networks[bssid] = {
-                                "bssid": bssid,
-                                "ssid": ssid,
-                                "channel": int(channel),
-                                "security": privacy
-                            }
-        except Exception as e:
-            logger.error(f"Error parsing airodump-ng output file {csv_path}: {e}")
-        finally:
-            for f in Path(tempfile.gettempdir()).glob(f"{Path(output_prefix).name}*"):
-                try:
-                    os.remove(f)
-                except OSError as e:
-                    logger.warning(f"Failed to remove temp file {f}: {e}")
+            elt_layer = elt_layer.payload.getlayer(Dot11Elt)
 
-    logger.info(f"Found {len(networks)} networks using airodump-ng.")
-    return list(networks.values())
+        # If SSID is empty or broadcast, it's a "hidden" network
+        if not ssid:
+            ssid = "<hidden>"
 
-def scan_networks_scapy(interface, scan_count=50, scan_time=None, logger=None):
-    if logger is None:
-        logger = logging.getLogger("scanner")
+        # Fallback to check beacon capabilities for WEP if no WPA/WPA2 was found
+        if not security:
+            if pkt.haslayer(Dot11Beacon) and pkt[Dot11Beacon].cap.privacy:
+                security.add("WEP")
+            else:
+                security.add("Open")
 
-    networks = {}
-    def handle(pkt):
-        if pkt.haslayer(Dot11Beacon) or pkt.haslayer(Dot11ProbeResp):
-            bssid = pkt[Dot11].addr2
-            ssid, channel, security = None, None, set()
-            elt = pkt.getlayer(Dot11Elt)
-            while elt is not None:
-                if elt.ID == 0:
-                    try: ssid = elt.info.decode(errors="ignore")
-                    except Exception: pass
-                elif elt.ID == 3:
-                    channel = elt.info[0] if elt.info else None
-                elif elt.ID == 48:
-                    security.add("WPA2")
-                elif elt.ID == 221 and elt.info.startswith(b'\x00P\xf2\x01\x01\x00'):
-                    security.add("WPA")
-                elt = elt.payload.getlayer(Dot11Elt)
-            
-            if not security:
-                if pkt.haslayer(Dot11Beacon) and pkt.getlayer(Dot11Beacon).cap.privacy:
-                    security.add("WEP")
-                else:
-                    security.add("Open")
+        if bssid and ssid:
+            # Prioritize stronger security protocols in the final display string
+            sec_str = (
+                "WPA2"
+                if "WPA2" in security
+                else "WPA"
+                if "WPA" in security
+                else "WEP"
+                if "WEP" in security
+                else "Open"
+            )
+            networks[bssid] = {
+                "ssid": ssid,
+                "bssid": bssid,
+                "channel": channel,
+                "security": sec_str,
+            }
 
-            if bssid and ssid is not None:
-                networks[bssid] = {"ssid": ssid, "bssid": bssid, "channel": channel, "security": "/".join(sorted(list(security)))}
-
-    sniff_kwargs = dict(iface=interface, prn=handle, store=0)
-    if scan_time: sniff_kwargs["timeout"] = scan_time
-    else: sniff_kwargs["count"] = scan_count
-    
     try:
-        scapy.sniff(**sniff_kwargs)
+        # Sniff packets for the specified duration
+        scapy.sniff(iface=interface, prn=handle_packet, store=0, timeout=scan_time)
     except Exception as e:
-        logger.error(f"Error during scapy sniff: {e}")
+        logger.error(
+            f"An error occurred during sniffing on interface '{interface}': {e}"
+        )
+        logger.error("Ensure the interface exists and you have sufficient permissions.")
+        return []
 
-    logger.info(f"Found {len(networks)} networks using scapy.")
+    logger.info(f"Scan complete. Found {len(networks)} unique networks.")
     return list(networks.values())
-
-def scan_networks(interface, method="airodump", **kwargs):
-    """
-    Wrapper for WiFi scanning.
-    :param interface: The wireless interface to use.
-    :param method: 'airodump' or 'scapy'.
-    :param kwargs: Arguments for the specific scanner function.
-    """
-    if method == "airodump":
-        return scan_networks_airodump(interface, scan_time=kwargs.get("scan_time", 15), logger=kwargs.get("logger"))
-    elif method == "scapy":
-        return scan_networks_scapy(interface, scan_count=kwargs.get("scan_count", 50), scan_time=kwargs.get("scan_time"), logger=kwargs.get("logger"))
-    else:
-        if kwargs.get("logger"):
-            kwargs.get("logger").error(f"Unknown scanner method: {method}")
-        raise ValueError("Unknown scanner method specified.")

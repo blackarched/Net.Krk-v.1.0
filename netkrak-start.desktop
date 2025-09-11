@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=Start net.krak
+Comment=Launch the net.krak WiFi pentesting suite
+Exec=/path/to/your/netkrak/project/start_netkrak.sh
+Icon=network-wired
+Terminal=false
+Type=Application
+Categories=System;Security;

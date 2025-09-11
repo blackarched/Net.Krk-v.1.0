@@ -1,0 +1,43 @@
+# File: .gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-selfcheck.json
+
+# Build and distribution
+.eggs/
+*.egg-info/
+dist/
+build/
+*.egg
+/downloads
+/site
+
+# Logs, captures, and secrets
+*.log
+*.db
+*.sqlite3
+logs/
+captures/
+*.pid
+.env
+
+# IDE and OS files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test output
+htmlcov/
+.tox/
+.pytest_cache/

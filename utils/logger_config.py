@@ -1,6 +1,3 @@
-#### **New File: `utils/logger_config.py`**
-(A new utility for shared, configurable logging)
-```python
 import logging
 import os
 import getpass

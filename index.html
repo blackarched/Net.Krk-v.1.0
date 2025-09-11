@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>net.krak - WiFi Penetration Suite</title>
+    <title>net.krak - Unified WiFi Suite</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap');
         
@@ -583,13 +584,95 @@
             justify-content: flex-end;
             gap: 10px;
         }
+
+        /* View switching styles */
+        #view-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+
+        #view-switcher button {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(20,20,25,0.6) 100%);
+            border: 1px solid rgba(0,255,255,0.6);
+            border-radius: 6px;
+            color: #00ffff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #view-switcher button:hover {
+            box-shadow: 0 0 20px rgba(0,255,255,0.3);
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        #view-switcher button.active {
+            background: linear-gradient(135deg, rgba(0,255,255,0.15) 0%, rgba(0,200,200,0.18) 100%);
+            border-color: rgba(0,255,255,0.8);
+            box-shadow: 0 0 25px rgba(0,255,255,0.4);
+        }
+
+        .view-container { 
+            display: none; 
+        }
+        
+        .view-container.active { 
+            display: grid; 
+        }
+
+        /* 3D Network Map styles */
+        #netmap-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: radial-gradient(ellipse at center, #0a0a0a 0%, #000000 70%);
+        }
+
+        .netmap-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,255,255,0.3);
+        }
+
+        .netmap-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,255,0,0.3);
+            color: #00ff00;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
     <div class="quantum-grid"></div>
     <div class="photon-cascade" id="photonCascade"></div>
 
-    <div class="neural-architecture">
+    <div id="view-switcher">
+        <button id="showDashboardBtn" class="active">Dashboard</button>
+        <button id="showNetmapBtn">Network Map</button>
+    </div>
+
+    <div id="app-container">
+        <div id="dashboard-view" class="view-container active neural-architecture">
         <div class="command-header">
             <div class="exploit-logo">net.krak</div>
             <div class="interface-status">
@@ -657,6 +740,18 @@
                 <div class="config-field">
                     <label class="config-label">Attack Status:</label>
                     <div class="config-value" id="attackStatus">Idle</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="netmap-view" class="view-container">
+            <div id="netmap-container">
+                <div class="netmap-controls">
+                    <h3 style="color: #00ffff; margin-bottom: 10px;">Network Map</h3>
+                    <p style="color: #ffffff; font-size: 11px;">3D visualization of network topology</p>
+                </div>
+                <div class="netmap-info">
+                    <div id="netmap-stats">Select a target network from Dashboard first</div>
                 </div>
             </div>
         </div>
@@ -904,6 +999,205 @@
                 cascade.appendChild(photon);
             }
         }
+
+        // --- VIEW SWITCHING LOGIC ---
+        const dashboardView = document.getElementById('dashboard-view');
+        const netmapView = document.getElementById('netmap-view');
+        
+        document.getElementById('showDashboardBtn').addEventListener('click', () => {
+            dashboardView.classList.add('active');
+            netmapView.classList.remove('active');
+            document.getElementById('showDashboardBtn').classList.add('active');
+            document.getElementById('showNetmapBtn').classList.remove('active');
+            // Potentially stop netmap animation
+            if (window.netmap && window.netmap.stop) window.netmap.stop();
+        });
+
+        document.getElementById('showNetmapBtn').addEventListener('click', () => {
+            if (!selectedTarget) {
+                addLogEntry('error', 'Select a target network from the Dashboard first to view its map.');
+                return;
+            }
+            dashboardView.classList.remove('active');
+            netmapView.classList.add('active');
+            document.getElementById('showDashboardBtn').classList.remove('active');
+            document.getElementById('showNetmapBtn').classList.add('active');
+            // Initialize or update the network map with the selected target
+            if (window.netmap && window.netmap.init) {
+                window.netmap.init(selectedTarget);
+            }
+        });
+
+        // =======================================================================
+        // --- 3D NETWORK MAP JAVASCRIPT ---
+        // We namespace it to avoid conflicts
+        window.netmap = (function() {
+            let scene, camera, renderer, nodes = [], connections = [], animationId;
+            const deviceColors = {
+                'gateway': 0x00ff00,
+                'client': 0x00ffff,
+                'router': 0xff6600
+            };
+
+            function init(targetNetwork) {
+                // Clear previous scene if it exists
+                const container = document.getElementById('netmap-container');
+                if (renderer) {
+                    container.removeChild(renderer.domElement);
+                }
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+                
+                // Setup Three.js scene, camera, renderer
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setClearColor(0x000000, 0);
+                container.appendChild(renderer.domElement);
+                
+                // Add lighting
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+                scene.add(ambientLight);
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+                directionalLight.position.set(10, 10, 5);
+                scene.add(directionalLight);
+                
+                // Position camera
+                camera.position.set(0, 10, 15);
+                camera.lookAt(0, 0, 0);
+                
+                // Add the AP/Router node to the scene based on targetNetwork
+                const routerNodeData = {
+                    id: targetNetwork.bssid,
+                    name: targetNetwork.ssid,
+                    type: 'gateway',
+                    position: [0, 0, 0]
+                };
+                createNode(routerNodeData);
+                
+                // Call backend to get clients for this AP
+                fetchClientsAndBuildMap(targetNetwork);
+
+                animate();
+            }
+
+            async function fetchClientsAndBuildMap(targetNetwork) {
+                const iface = document.getElementById('wifiInterface').value;
+                addLogEntry('info', `Fetching clients for ${targetNetwork.bssid}...`);
+                
+                try {
+                    const resp = await fetch(`/clients?interface=${iface}&bssid=${targetNetwork.bssid}&channel=${targetNetwork.channel}`);
+                    const clients = await resp.json();
+                    
+                    if (clients.length === 0) {
+                        addLogEntry('warning', 'No connected clients found for this network.');
+                        document.getElementById('netmap-stats').textContent = 'No clients found';
+                    } else {
+                        document.getElementById('netmap-stats').textContent = `Found ${clients.length} clients`;
+                    }
+
+                    // Distribute clients in a circle around the router
+                    const radius = 5;
+                    clients.forEach((client, index) => {
+                        const angle = (index / clients.length) * Math.PI * 2;
+                        client.position = [Math.cos(angle) * radius, 0, Math.sin(angle) * radius];
+                        createNode(client);
+                    });
+                    createConnections();
+
+                } catch (e) {
+                    addLogEntry('error', `Failed to fetch client list: ${e.message}`);
+                    document.getElementById('netmap-stats').textContent = 'Error fetching clients';
+                }
+            }
+
+            function createNode(device) {
+                const geometry = new THREE.SphereGeometry(0.5, 16, 16);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: deviceColors[device.type] || deviceColors.client,
+                    emissive: deviceColors[device.type] || deviceColors.client,
+                    emissiveIntensity: 0.2
+                });
+                const sphere = new THREE.Mesh(geometry, material);
+                
+                sphere.position.set(device.position[0], device.position[1], device.position[2]);
+                sphere.userData = { device: device };
+                scene.add(sphere);
+                nodes.push(sphere);
+                
+                // Add label
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = 128;
+                canvas.height = 64;
+                context.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                context.fillRect(0, 0, 128, 64);
+                context.fillStyle = '#ffffff';
+                context.font = '12px Arial';
+                context.textAlign = 'center';
+                context.fillText(device.name || device.mac, 64, 20);
+                context.fillText(device.mac, 64, 40);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const labelMaterial = new THREE.SpriteMaterial({ map: texture });
+                const label = new THREE.Sprite(labelMaterial);
+                label.position.set(device.position[0], device.position[1] + 1, device.position[2]);
+                label.scale.set(2, 1, 1);
+                scene.add(label);
+            }
+
+            function createConnections() {
+                // Clear existing connections
+                connections.forEach(conn => scene.remove(conn));
+                connections = [];
+                
+                // Create connections from router to all clients
+                const router = nodes.find(node => node.userData.device.type === 'gateway');
+                if (router) {
+                    nodes.forEach(node => {
+                        if (node !== router) {
+                            const geometry = new THREE.BufferGeometry().setFromPoints([
+                                new THREE.Vector3(router.position.x, router.position.y, router.position.z),
+                                new THREE.Vector3(node.position.x, node.position.y, node.position.z)
+                            ]);
+                            const material = new THREE.LineBasicMaterial({ 
+                                color: 0x00ff00, 
+                                transparent: true, 
+                                opacity: 0.6 
+                            });
+                            const line = new THREE.Line(geometry, material);
+                            scene.add(line);
+                            connections.push(line);
+                        }
+                    });
+                }
+            }
+
+            function animate() {
+                animationId = requestAnimationFrame(animate);
+                
+                // Rotate nodes slightly
+                nodes.forEach((node, index) => {
+                    node.rotation.y += 0.01;
+                    node.position.y = Math.sin(Date.now() * 0.001 + index) * 0.2;
+                });
+                
+                renderer.render(scene, camera);
+            }
+
+            function stop() { 
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            }
+
+            // Expose public methods
+            return { init, stop };
+        })();
+        // =======================================================================
 
         // Initialize the dashboard when the DOM is loaded.
         document.addEventListener('DOMContentLoaded', () => {

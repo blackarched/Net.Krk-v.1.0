@@ -8,7 +8,8 @@ from pathlib import Path
 from flask import Flask, request, jsonify, abort, render_template
 
 from scanner import scan_networks
-from attacks import deauth_attack, capture_handshake, perform_evil_twin
+# discover_clients is a new function we will add to the attacks module
+from attacks import deauth_attack, capture_handshake, perform_evil_twin, discover_clients
 from utils.logger_config import setup_logging, log_event
 
 # Serve the dashboard from the 'static' folder
@@ -37,6 +38,23 @@ def api_scan():
     nets = scan_networks(interface, scan_time=scan_time, logger=logger)
     log_event(logger, "api_scan_complete", network_count=len(nets))
     return jsonify(nets)
+
+@app.route("/clients", methods=["GET"])
+def api_discover_clients():
+    """New endpoint to discover clients connected to a specific BSSID."""
+    interface = request.args.get("interface")
+    bssid = request.args.get("bssid")
+    channel = request.args.get("channel", type=int)
+
+    if not all([interface, bssid, channel]):
+        return jsonify({"error": "Missing required parameters: interface, bssid, channel"}), 400
+    if not IFACE_REGEX.match(interface) or not MAC_REGEX.match(bssid):
+        return jsonify({"error": "Invalid parameter format"}), 400
+
+    log_event(logger, "client_scan_start", bssid=bssid)
+    clients = discover_clients(interface, bssid, channel, logger=logger)
+    log_event(logger, "client_scan_complete", client_count=len(clients))
+    return jsonify(clients)
 
 @app.route("/attack", methods=["POST"])
 def api_attack():

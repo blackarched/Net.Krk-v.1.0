@@ -18,10 +18,10 @@ try:
 except ImportError:
     psutil = None
 from pathlib import Path
-from scanner import scan_networks, list_wifi_interfaces, get_network_info, get_scan_status
-from attacks import (deauth_attack, capture_handshake, perform_evil_twin, capture_credentials,
-                    perform_wps_attack, perform_fragmentation_attack, stop_attack, stop_all_attacks,
-                    get_attack_status)
+from .scanner import scan_networks, list_wifi_interfaces, get_network_info, get_scan_status
+from .attacks import (deauth_attack, capture_handshake, perform_evil_twin, capture_credentials,
+                     perform_wps_attack, perform_fragmentation_attack, stop_attack, stop_all_attacks,
+                     get_attack_status)
 
 # Configuration
 PID_FILE = ".netkrak.pid"
@@ -438,7 +438,7 @@ class NetKrakOrchestrator:
         """Run comprehensive system diagnostics"""
         try:
             # Import diagnostics module
-            from utils.runtime_diagnostics import RuntimeDiagnostics
+            from .utils.runtime_diagnostics import RuntimeDiagnostics
             
             diagnostics_engine = RuntimeDiagnostics()
             diagnostics = diagnostics_engine.run_comprehensive_diagnostics()

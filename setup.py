@@ -28,7 +28,8 @@ setup(
         "Source": "https://github.com/netkrak/netkrak",
         "Documentation": "https://github.com/netkrak/netkrak/wiki",
     },
-    packages=find_packages(),
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Information Technology",
@@ -57,8 +58,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "netkrak=orchestrator:main",
-            "netkrak-diagnostics=utils.runtime_diagnostics:main",
+            "netkrak=src.orchestrator:main",
+            "netkrak-diagnostics=src.utils.runtime_diagnostics:main",
         ],
     },
     include_package_data=True,

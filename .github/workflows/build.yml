@@ -89,11 +89,11 @@ jobs:
     steps:
     - name: Test full image
       run: |
-        docker run --rm ghcr.io/${{ github.repository }}-full:latest python3 -c "import orchestrator; print('Full image OK')"
+        docker run --rm ghcr.io/${{ github.repository }}-full:latest python3 -c "import src.orchestrator; print('Full image OK')"
     
     - name: Test demo image
       run: |
-        docker run --rm ghcr.io/${{ github.repository }}-demo:latest python3 -c "import dashboard_api; print('Demo image OK')"
+        docker run --rm ghcr.io/${{ github.repository }}-demo:latest python3 -c "import src.dashboard_api; print('Demo image OK')"
 
   security-scan:
     runs-on: ubuntu-latest

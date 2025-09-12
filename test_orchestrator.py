@@ -11,7 +11,7 @@ class TestOrchestrator(unittest.TestCase):
         
         # Execute the script as a subprocess with a valid command structure
         result = subprocess.run(
-            [sys.executable, "orchestrator.py", "scan", "lo"], 
+            [sys.executable, "src/orchestrator.py", "scan", "lo"],
             capture_output=True, 
             text=True
         )

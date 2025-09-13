@@ -140,7 +140,7 @@ def analytics_dashboard():
         
         return html_content
     except FileNotFoundError:
-        # Fallback to original dashboard if new_dash.html not found
+        # Fallback to original dashboard if new_dash2.html not found
         return '''
         <!DOCTYPE html>
         <html lang="en">
@@ -614,7 +614,7 @@ def attack_dashboard():
         
         return html_content
     except FileNotFoundError:
-        # Fallback to original attack dashboard if new_dash.html not found
+        # Fallback to original attack dashboard if new_dash2.html not found
         return '''
         <!DOCTYPE html>
         <html lang="en">

@@ -149,7 +149,7 @@ def home():
         
         return html_content
     except FileNotFoundError:
-        # Fallback to original analytics dashboard if new_dash.html not found
+        # Fallback to original analytics dashboard if new_dash2.html not found
         return '''
         <!DOCTYPE html>
         <html lang="en">

@@ -103,7 +103,7 @@ def execute_attack(target, attack_type):
 def analytics_dashboard():
     # Read the new dashboard HTML file
     try:
-        with open('new_dash.html', 'r') as f:
+        with open('new_dash2.html', 'r') as f:
             html_content = f.read()
         
         # Replace mock data with real API calls
@@ -113,6 +113,29 @@ def analytics_dashboard():
                 const response = await fetch('/api/scan');
                 const data = await response.json();
                 const networks = data.networks || [];'''
+        )
+        
+        # Replace attack mock data with real API calls
+        html_content = html_content.replace(
+            '// Simulate API call with mock response\n                    await new Promise(resolve => setTimeout(resolve, 3000));\n                    \n                    // Simulate success or failure\n                    const success = Math.random() > 0.3;',
+            '''// Real API call
+                    const attackResponse = await fetch('/api/execute-attack', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            attack_type: vector,
+                            target: selectedTarget
+                        })
+                    });
+                    const attackData = await attackResponse.json();
+                    const success = attackData.status === 'success';'''
+        )
+        
+        # Replace stop attack mock data
+        html_content = html_content.replace(
+            '// Simulate API call\n                await new Promise(resolve => setTimeout(resolve, 1000));',
+            '''// Real API call
+                await fetch('/api/attack/stop', { method: 'POST' });'''
         )
         
         return html_content
@@ -542,13 +565,13 @@ def analytics_dashboard():
 def attack_dashboard():
     # Read the new dashboard HTML file and modify for attack mode
     try:
-        with open('new_dash.html', 'r') as f:
+        with open('new_dash2.html', 'r') as f:
             html_content = f.read()
         
         # Modify for attack dashboard
         html_content = html_content.replace(
-            '<title>net.krak - WiFi Penetration Suite v2.0</title>',
-            '<title>net.krak - Attack Dashboard v2.0</title>'
+            '<title>NET.KRAK // WiFi Penetration Suite v3.0</title>',
+            '<title>NET.KRAK // Attack Dashboard v3.0</title>'
         )
         
         # Replace mock data with real API calls
@@ -560,10 +583,33 @@ def attack_dashboard():
                 const networks = data.networks || [];'''
         )
         
+        # Replace attack mock data with real API calls
+        html_content = html_content.replace(
+            '// Simulate API call with mock response\n                    await new Promise(resolve => setTimeout(resolve, 3000));\n                    \n                    // Simulate success or failure\n                    const success = Math.random() > 0.3;',
+            '''// Real API call
+                    const attackResponse = await fetch('/api/execute-attack', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            attack_type: vector,
+                            target: selectedTarget
+                        })
+                    });
+                    const attackData = await attackResponse.json();
+                    const success = attackData.status === 'success';'''
+        )
+        
+        # Replace stop attack mock data
+        html_content = html_content.replace(
+            '// Simulate API call\n                await new Promise(resolve => setTimeout(resolve, 1000));',
+            '''// Real API call
+                await fetch('/api/attack/stop', { method: 'POST' });'''
+        )
+        
         # Add attack-specific modifications
         html_content = html_content.replace(
-            'net.krak v2.0',
-            'net.krak ATTACK v2.0'
+            'NET.KRAK',
+            'NET.KRAK // ATTACK'
         )
         
         return html_content

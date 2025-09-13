@@ -6,6 +6,21 @@
     <title>NET.KRAK // Analytics Dashboard v3.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Fallback for Three.js if CDN fails
+        if (typeof THREE === 'undefined') {
+            console.warn('Three.js CDN failed, loading fallback...');
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/three@0.128.0/build/three.min.js';
+            script.onload = function() {
+                console.log('Three.js fallback loaded');
+                if (typeof init3DNetworkMap === 'function') {
+                    init3DNetworkMap();
+                }
+            };
+            document.head.appendChild(script);
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
         
@@ -292,9 +307,39 @@
         #networkMap3D {
             width: 100%;
             height: 250px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--neon-green);
-            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--neon-green);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neon-green);
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+        }
+
+        /* Fallback 3D effect if Three.js fails */
+        #networkMap3D.fallback-3d {
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 255, 157, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 243, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+                linear-gradient(45deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 20, 40, 0.9) 100%);
+            animation: networkPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes networkPulse {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+                transform: perspective(1000px) rotateX(5deg) rotateY(0deg);
+            }
+            50% { 
+                box-shadow: 0 0 40px rgba(0, 255, 157, 0.6);
+                transform: perspective(1000px) rotateX(5deg) rotateY(5deg);
+            }
         }
 
         /* Network Scanning Section - MUCH LARGER */
@@ -601,7 +646,12 @@
                 <!-- 3D Network Map -->
                 <div class="network-map-section">
                     <h2 class="map-title">3D NETWORK MAP</h2>
-                    <div id="networkMap3D"></div>
+                    <div id="networkMap3D">
+                        <div style="text-align: center; color: var(--neon-green);">
+                            <div style="margin-bottom: 10px;">🔄 Initializing 3D Network Map...</div>
+                            <div style="font-size: 12px; opacity: 0.7;">Loading Three.js visualization</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Network Scanning Results - MUCH LARGER -->
@@ -692,13 +742,42 @@
 
         // Initialize 3D Network Map
         function init3DNetworkMap() {
+            console.log('Initializing 3D Network Map...');
             const container = document.getElementById('networkMap3D');
+            
+            if (!container) {
+                console.error('3D Network Map container not found!');
+                return;
+            }
+            
+            if (typeof THREE === 'undefined') {
+                console.warn('Three.js library not loaded, using CSS fallback');
+                container.className = 'fallback-3d';
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--neon-green);">
+                        <div style="margin-bottom: 10px;">🌐 3D Network Map</div>
+                        <div style="font-size: 12px; opacity: 0.7;">CSS Fallback Mode</div>
+                        <div style="font-size: 10px; opacity: 0.5; margin-top: 10px;">
+                            Network nodes will appear here when discovered
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            console.log('Container found, creating 3D scene...');
             
             // Create scene
             networkMapScene = new THREE.Scene();
-            networkMapCamera = new THREE.PerspectiveCamera(75, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+            networkMapScene.background = new THREE.Color(0x000000);
+            
+            // Get container dimensions
+            const width = container.offsetWidth || 400;
+            const height = container.offsetHeight || 250;
+            
+            networkMapCamera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
             networkMapRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-            networkMapRenderer.setSize(container.offsetWidth, container.offsetHeight);
+            networkMapRenderer.setSize(width, height);
             networkMapRenderer.setClearColor(0x000000, 0);
             container.appendChild(networkMapRenderer.domElement);
 
@@ -715,6 +794,8 @@
             
             // Position camera
             networkMapCamera.position.z = 15;
+            
+            console.log('3D Network Map initialized successfully');
             
             // Start animation
             animate3DNetworkMap();

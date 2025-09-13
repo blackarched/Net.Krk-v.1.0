@@ -1,71 +1,61 @@
 #!/bin/bash
-set -e
 
-# --- Safety: Require root ---
-if [ "$EUID" -ne 0 ]; then
-  echo "[FATAL] Please run as root (sudo $0)"
-  exit 1
-fi
+# NET.KRAK v3.0 Setup and Run Script
+echo "🚀 NET.KRAK v3.0 Setup and Run Script"
+echo "======================================"
 
-# Navigate to script directory to ensure relative paths work
-cd "$(dirname "$0")"
-
-# --- Python venv ---
-if [ ! -d ".venv" ]; then
-  echo "[INFO] Creating Python virtual environment..."
-  python3 -m venv .venv
-fi
-source .venv/bin/activate
-
-# --- Install Python dependencies from requirements.txt ---
-echo "[INFO] Installing/updating Python dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
-
-# --- Install system dependencies ---
-if ! command -v airodump-ng >/dev/null 2>&1; then
-  echo "[INFO] aircrack-ng suite not found. Installing..."
-  # This works for Debian/Ubuntu based systems
-  apt-get update && apt-get install -y aircrack-ng
+# Check if we're in a virtual environment
+if [[ "$VIRTUAL_ENV" != "" ]]; then
+    echo "✅ Virtual environment detected: $VIRTUAL_ENV"
+    PYTHON_CMD="python"
 else
-  echo "[INFO] aircrack-ng suite found."
+    echo "⚠️  No virtual environment detected"
+    echo "   Using system Python (may require sudo for WiFi access)"
+    PYTHON_CMD="python3"
 fi
 
-# --- Check for required tools ---
-for tool in iwconfig ifconfig; do
-  if ! command -v $tool >/dev/null 2>&1; then
-    echo "[FATAL] Required tool '$tool' not found. Please install net-tools or equivalent."
+# Install dependencies
+echo ""
+echo "📦 Installing dependencies..."
+if [[ "$VIRTUAL_ENV" != "" ]]; then
+    pip install flask flask_cors scapy psutil
+else
+    echo "   Installing system-wide (may require sudo)..."
+    sudo pip install flask flask_cors scapy psutil
+fi
+
+# Check if dependencies are installed
+echo ""
+echo "🔍 Checking dependencies..."
+$PYTHON_CMD -c "import flask, flask_cors, scapy, psutil; print('✅ All dependencies available')" 2>/dev/null || {
+    echo "❌ Some dependencies missing. Please install manually:"
+    echo "   pip install flask flask_cors scapy psutil"
     exit 1
-  fi
-done
+}
 
-# --- Start Flask backend with a production-ready WSGI server (waitress) ---
-# Add waitress to requirements.txt if you want to use it
-# pip install waitress
-echo "[INFO] Starting Flask backend API (dashboard_api.py) on :5000..."
-# Using waitress-serve instead of Flask's debug server
-# nohup .venv/bin/waitress-serve --host=0.0.0.0 --port=5000 dashboard_api:app > flask_backend.log 2>&1 &
-# Sticking with the original for simplicity, but warning it's not for production
-nohup .venv/bin/python3 dashboard_api.py > flask_backend.log 2>&1 &
-BACKEND_PID=$!
-echo $BACKEND_PID > .dashboard_api.pid
-sleep 2
-
-# --- Start HTTP server for dashboard ---
-echo "[INFO] Starting HTTP server for dashboard on :8080..."
-nohup .venv/bin/python3 -m http.server 8080 --bind 127.0.0.1 > dashboard_http.log 2>&1 &
-HTTP_PID=$!
-echo $HTTP_PID > .dashboard_http.pid
-sleep 2
-
-# --- Open dashboard in browser (if possible) ---
-if command -v xdg-open >/dev/null 2>&1; then
-  xdg-open http://localhost:8080/netkrak_dashboard.html
+# Check for WiFi interface
+echo ""
+echo "📡 Checking WiFi interface..."
+if command -v iwconfig &> /dev/null; then
+    echo "Available WiFi interfaces:"
+    iwconfig 2>/dev/null | grep -E "IEEE 802.11|ESSID" || echo "   No WiFi interfaces found"
 else
-  echo "[INFO] Please open http://localhost:8080/netkrak_dashboard.html in your browser."
+    echo "⚠️  iwconfig not found. WiFi scanning may not work."
 fi
 
-echo "[SUCCESS] net.krak dashboard is running."
-echo "  - Flask API Server: http://localhost:5000"
-echo "  - Web Dashboard:    http://localhost:8080/netkrak_dashboard.html"
-echo "To stop the services, run: kill \`cat .dashboard_api.pid\` \`cat .dashboard_http.pid\`"
+# Run the application
+echo ""
+echo "🎯 Starting NET.KRAK v3.0..."
+echo "   Dashboard will be available at: http://localhost:5000"
+echo "   Attack dashboard at: http://localhost:5000/attack"
+echo "   Press Ctrl+C to stop"
+echo ""
+
+# Try to run without sudo first
+if [[ "$VIRTUAL_ENV" != "" ]]; then
+    echo "🚀 Running with virtual environment Python..."
+    $PYTHON_CMD src/combined_dashboard.py
+else
+    echo "🚀 Running with system Python..."
+    $PYTHON_CMD src/combined_dashboard.py
+fi

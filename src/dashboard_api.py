@@ -11,14 +11,14 @@ from pathlib import Path
 from flask import Flask, request, jsonify, abort, render_template, Response
 from flask_cors import CORS
 
-from scanner import scan_networks, list_wifi_interfaces, get_network_info, get_client_info, get_scan_status
-from attacks import (deauth_attack, capture_handshake, perform_evil_twin, capture_credentials,
-                    perform_wps_attack, perform_fragmentation_attack, stop_attack, stop_all_attacks,
-                    get_attack_status)
-from utils.logger_config import setup_logging, log_event
+from .scanner import scan_networks, list_wifi_interfaces, get_network_info, get_client_info, get_scan_status
+from .attacks import (deauth_attack, capture_handshake, perform_evil_twin, capture_credentials,
+                     perform_wps_attack, perform_fragmentation_attack, stop_attack, stop_all_attacks,
+                     get_attack_status)
+from .utils.logger_config import setup_logging, log_event
 
 # Initialize Flask app
-app = Flask(__name__, static_folder='static', template_folder='static')
+app = Flask(__name__, static_folder='../web/static', template_folder='../web/templates')
 CORS(app)  # Enable CORS for all routes
 
 # Setup logging

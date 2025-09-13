@@ -1,345 +1,431 @@
-# net.krak v2.0 - WiFi Penetration Testing Suite
+# NET.KRAK // WiFi Penetration Suite v3.0
 
-A comprehensive, hardened WiFi penetration testing suite with enhanced attack vectors, improved performance, and a modern web-based dashboard.
+<div align="center">
 
-## 🚀 Features
+![NET.KRAK Logo](https://img.shields.io/badge/NET.KRAK-v3.0-00f3ff?style=for-the-badge&logo=wifi&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.8+-00ff9d?style=for-the-badge&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-2.0+-ff00ff?style=for-the-badge&logo=flask&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-bd00ff?style=for-the-badge)
 
-### Enhanced Attack Vectors
-- **Deauthentication Attacks** - Forcefully disconnect clients from target APs
-- **Handshake Capture** - Capture WPA/WPA2 handshakes for offline cracking
-- **Evil Twin AP** - Create rogue access points to trick clients
-- **Credential Capture** - Monitor and capture login credentials
-- **WPS PIN Attacks** - Brute force WPS PINs using reaver/bully
-- **Fragmentation Attacks** - Exploit fragmentation vulnerabilities
+**Professional WiFi Penetration Testing Suite with Advanced 3D Visualization**
 
-### Advanced Scanning
-- **Multi-method Scanning** - Scapy and airodump-ng support
-- **Real-time Network Discovery** - Live network monitoring
-- **Client Detection** - Identify connected devices
-- **Signal Strength Analysis** - RSSI monitoring and analysis
-- **Security Protocol Detection** - WEP, WPA, WPA2, WPA3 identification
+[![Dashboard Preview](https://img.shields.io/badge/Dashboard-Preview-00f3ff?style=for-the-badge)](http://localhost:5000)
+[![Attack Dashboard](https://img.shields.io/badge/Attack-Dashboard-ff00ff?style=for-the-badge)](http://localhost:5000/attack)
+[![Analytics Dashboard](https://img.shields.io/badge/Analytics-Dashboard-00ff9d?style=for-the-badge)](http://localhost:5000)
 
-### Modern Dashboard
-- **Holographic UI** - Futuristic, responsive web interface
-- **Real-time Monitoring** - Live status updates and activity logs
-- **Attack Management** - Visual attack vector selection and execution
-- **System Status** - Comprehensive system health monitoring
-- **Mobile Responsive** - Works on desktop and mobile devices
+</div>
 
-### Enhanced Security
-- **Authorization Checks** - Legal compliance and safety measures
-- **Process Management** - Secure process isolation and cleanup
-- **Input Validation** - Comprehensive parameter validation
-- **Error Handling** - Robust error handling and recovery
-- **Audit Logging** - Detailed JSON-structured logging
+---
 
-## 📋 Requirements
+## 🎯 **Overview**
 
-### System Requirements
-- Linux (Ubuntu 20.04+ recommended)
-- Python 3.7+
-- 2GB+ RAM
-- 1GB+ free disk space
-- 2+ CPU cores
-- Root privileges for network operations
+NET.KRAK v3.0 is a comprehensive WiFi penetration testing suite featuring advanced 3D network visualization, real-time scanning, and professional attack capabilities. Built with modern web technologies and designed for both desktop and mobile environments.
 
-### Hardware Requirements
-- WiFi adapter supporting monitor mode
-- Compatible wireless drivers
-- Sufficient antenna range for target networks
+### ✨ **Key Features**
 
-### Software Dependencies
-- aircrack-ng suite
-- reaver (for WPS attacks)
-- bully (alternative WPS tool)
-- iw (wireless tools)
-- net-tools
-- Docker (optional)
+- 🌐 **3D Network Visualization** - Interactive Three.js network mapping
+- 📡 **Real-time WiFi Scanning** - Live network discovery using `iwlist`
+- ⚡ **Advanced Attack Vectors** - Deauth, Handshake, Evil Twin, WPS, and more
+- 🎨 **Holographic UI** - Cyberpunk-inspired interface with neon effects
+- 📱 **Mobile Optimized** - Full compatibility with Pydroid and mobile devices
+- 🔒 **Professional Security** - Enterprise-grade penetration testing tools
+- 📊 **Real-time Analytics** - Live statistics and network monitoring
 
-## 🛠️ Installation
+---
 
-### Quick Start (Docker)
+## 🚀 **Quick Start Guide**
+
+### **Prerequisites**
+
+- Python 3.8 or higher
+- Linux/Android environment (for WiFi scanning)
+- WiFi interface in monitor mode (for attack capabilities)
+
+### **Installation**
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/blackarched/Net.Krk-v.1.0.git
+   cd Net.Krk-v.1.0
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Set WiFi Interface to Monitor Mode** (Required for attacks)
+   ```bash
+   sudo airmon-ng start wlan0
+   # Note: Replace 'wlan0' with your WiFi interface name
+   ```
+
+---
+
+## 🎮 **How to Run the Application**
+
+### **Method 1: Combined Dashboard (Recommended)**
+
+The combined dashboard provides access to both analytics and attack capabilities in a single interface.
+
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd net.krak
+# Navigate to the project directory
+cd /path/to/Net.Krk-v.1.0
 
-# Build and run with Docker Compose
-sudo docker-compose up -d
-
-# Access the dashboard
-open http://localhost:5000
+# Run the combined dashboard
+python src/combined_dashboard.py
 ```
 
-### Manual Installation
+**Access URLs:**
+- **Main Dashboard**: http://localhost:5000
+- **Attack Dashboard**: http://localhost:5000/attack
+
+### **Method 2: Separate Dashboards**
+
+Run individual dashboard components for specific use cases.
+
+#### **Analytics Dashboard Only**
 ```bash
-# Install system dependencies
-sudo apt-get update
-sudo apt-get install -y aircrack-ng reaver bully iw net-tools
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Run the application
-sudo python3 dashboard_api.py
+python src/analytics_dashboard.py
 ```
+- **URL**: http://localhost:5000
+- **Purpose**: Network discovery and analysis
 
-### Desktop Shortcuts
+#### **Attack Dashboard Only**
 ```bash
-# Install desktop shortcuts
-./setup_desktop.sh
-
-# Or run manually
-./start_netkrak.sh    # Start the suite
-./stop_netkrak.sh     # Stop the suite
+python src/attack_dashboard.py
 ```
+- **URL**: http://localhost:5001
+- **Purpose**: Penetration testing and attack execution
 
-## 🎯 Usage
+---
 
-### Web Dashboard
-1. Open your browser to `http://localhost:5000`
-2. Enter your WiFi interface (e.g., `wlan0mon`)
-3. Click "SCAN NETWORKS" to discover targets
-4. Select a target network
-5. Choose attack vectors
-6. Click "EXECUTE ATTACK" and confirm
+## 📱 **Mobile Usage (Pydroid)**
 
-### Command Line Interface
-```bash
-# List available interfaces
-sudo python3 orchestrator.py list-interfaces
+### **For Android Development with Pydroid**
 
-# Scan for networks
-sudo python3 orchestrator.py scan wlan0mon --scan-time 30
+1. **Install Pydroid 3** from Google Play Store
+2. **Install Dependencies** in Pydroid:
+   ```python
+   # In Pydroid terminal
+   pip install flask
+   ```
 
-# Execute attacks
-sudo python3 orchestrator.py attack wlan0mon \
-    --bssid "00:11:22:33:44:55" \
-    --ssid "TargetNetwork" \
-    --channel 6 \
-    --attack-type deauth \
-    --authorized
+3. **Upload Project Files** to Pydroid workspace
+4. **Run the Application**:
+   ```python
+   # In Pydroid
+   exec(open('src/combined_dashboard.py').read())
+   ```
 
-# Get system status
-sudo python3 orchestrator.py status
+5. **Access Dashboard**:
+   - Open browser in Pydroid
+   - Navigate to: `http://localhost:5000`
 
-# Clean up processes
-sudo python3 orchestrator.py cleanup
+---
+
+## 🎨 **Dashboard Interface Guide**
+
+### **Main Dashboard Features**
+
+#### **1. Network Discovery Panel**
+- **WiFi Interface Input**: Enter your monitor mode interface (e.g., `wlan0mon`)
+- **SCAN NETWORKS Button**: Initiates real-time WiFi scanning
+- **STATUS Button**: Shows system status and statistics
+- **Network List**: Displays discovered networks with details
+
+#### **2. Target Analysis Panel**
+- **Target Selection**: Click on discovered networks to select targets
+- **Attack Vectors**: Choose from available attack methods:
+  - 🔴 **Deauthentication Attack**
+  - 🔵 **Handshake Capture**
+  - 🟡 **Evil Twin**
+  - 🟢 **Credential Capture**
+  - 🟣 **WPS Attack**
+  - 🟠 **Fragmentation Attack**
+
+#### **3. Attack Execution Panel**
+- **EXECUTE ATTACK Button**: Launches selected attack vectors
+- **STOP ALL Button**: Immediately stops all active attacks
+- **Attack Status**: Real-time attack progress and results
+
+#### **4. Activity Log Panel**
+- **Real-time Logging**: Live operation monitoring
+- **Color-coded Messages**: Different log types (info, success, error, attack)
+- **Scrollable History**: Complete operation history
+
+#### **5. Interface Configuration Panel**
+- **WiFi Interface**: Set your monitor mode interface
+- **System Status**: Real-time system monitoring
+- **Configuration Options**: Advanced settings and preferences
+
+### **3D Network Visualization**
+
+The dashboard includes an advanced 3D network map featuring:
+- **Interactive 3D Nodes**: Representing discovered devices
+- **Signal Visualization**: Color-coded signal strength
+- **Network Topology**: Dynamic connection mapping
+- **Real-time Updates**: Live network changes
+- **Camera Controls**: Zoom, pan, and rotate
+- **Device Information**: Hover for detailed device data
+
+---
+
+## 🔧 **API Endpoints**
+
+### **Network Scanning**
+```http
+GET /api/scan
 ```
-
-### API Endpoints
-```bash
-# System information
-curl http://localhost:5000/system/info
-
-# Scan networks
-curl "http://localhost:5000/scan?interface=wlan0mon&scan_time=15"
-
-# Execute attack
-curl -X POST http://localhost:5000/attack \
-    -H "Content-Type: application/json" \
-    -d '{"interface":"wlan0mon","bssid":"00:11:22:33:44:55","ssid":"Target","attack_type":"deauth"}'
-
-# Stop attacks
-curl -X POST http://localhost:5000/attack/stop
-
-# Get logs
-curl http://localhost:5000/logs
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-```bash
-export NETKRAK_LOG_FILE="/path/to/logs/netkrak.jsonlog"
-export PYTHONPATH="/path/to/netkrak"
-```
-
-### Configuration File
-Create `.netkrak_config.json`:
+**Response:**
 ```json
 {
-  "max_scan_time": 300,
-  "max_attack_duration": 3600,
-  "auto_cleanup": true,
-  "log_level": "INFO",
-  "safety_checks": true
+  "status": "success",
+  "networks": [
+    {
+      "ssid": "WiFiNetwork",
+      "bssid": "00:11:22:33:44:55",
+      "channel": 6,
+      "security": "WPA2",
+      "signal": -45,
+      "quality": "Excellent"
+    }
+  ]
 }
 ```
 
-## 🧪 Testing
-
-### Run Test Suite
-```bash
-# Run comprehensive tests
-python3 test_comprehensive.py
-
-# Run specific test modules
-python3 -m unittest test_attacks.py
-python3 -m unittest test_scanner.py
-python3 -m unittest test_orchestrator.py
+### **System Statistics**
+```http
+GET /api/stats
+```
+**Response:**
+```json
+{
+  "total_networks": 15,
+  "hidden_networks": 3,
+  "open_networks": 2,
+  "secured_networks": 10,
+  "strongest_signal": -30,
+  "scan_time": "14:30:25",
+  "is_scanning": false
+}
 ```
 
-### Performance Optimization
-```bash
-# Run system optimization
-python3 optimize.py
+### **Attack Execution**
+```http
+POST /api/execute-attack
+Content-Type: application/json
 
-# Benchmark performance
-python3 -c "from optimize import NetKrakOptimizer; NetKrakOptimizer().benchmark_performance()"
+{
+  "attack_type": "deauth",
+  "target": {
+    "ssid": "TargetNetwork",
+    "bssid": "00:11:22:33:44:55"
+  }
+}
 ```
 
-## 📊 Monitoring
-
-### Real-time Monitoring
-The dashboard provides real-time monitoring of:
-- Network discovery status
-- Active attack processes
-- System resource usage
-- Error logs and warnings
-- Performance metrics
-
-### Log Analysis
-Logs are stored in JSON format for easy analysis:
-```bash
-# View recent logs
-tail -f logs/netkrak.jsonlog | jq .
-
-# Filter by event type
-grep "attack_start" logs/netkrak.jsonlog | jq .
+### **Target Selection**
+```http
+GET /api/targets
+```
+**Response:**
+```json
+{
+  "status": "success",
+  "targets": [
+    {
+      "ssid": "TargetNetwork",
+      "bssid": "00:11:22:33:44:55",
+      "channel": 6,
+      "security": "WPA2",
+      "signal": -45
+    }
+  ]
+}
 ```
 
-## 🛡️ Security & Legal
-
-### Legal Compliance
-- **Authorization Required** - All attacks require explicit authorization
-- **Target Confirmation** - Interactive confirmation for attack targets
-- **Audit Logging** - Comprehensive logging of all activities
-- **Safety Checks** - Built-in safety measures and warnings
-
-### Security Features
-- **Process Isolation** - Attacks run in isolated processes
-- **Input Validation** - Comprehensive parameter validation
-- **Error Handling** - Secure error handling and recovery
-- **Resource Limits** - Memory and CPU usage limits
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-#### Interface Not Found
-```bash
-# Check available interfaces
-iwconfig
-ip link show
-
-# Set interface to monitor mode
-sudo airmon-ng start wlan0
+### **Attack Statistics**
+```http
+GET /api/attack-stats
+```
+**Response:**
+```json
+{
+  "total_attacks": 5,
+  "successful_attacks": 3,
+  "active_attacks": 1,
+  "attack_types": ["deauth", "handshake"]
+}
 ```
 
-#### Permission Denied
-```bash
-# Ensure running as root
-sudo python3 dashboard_api.py
+---
 
-# Check capabilities
-sudo setcap cap_net_raw,cap_net_admin+eip /usr/bin/python3
-```
+## 🎯 **Usage Instructions**
 
-#### No Networks Found
-```bash
-# Verify monitor mode
-iwconfig wlan0mon
+### **Step 1: Initial Setup**
+1. **Start the Application**:
+   ```bash
+   python src/combined_dashboard.py
+   ```
 
-# Check interface status
-ip link show wlan0mon
+2. **Open Your Browser**:
+   - Navigate to: `http://localhost:5000`
+   - You'll see the main dashboard interface
 
-# Test with airodump-ng
-sudo airodump-ng wlan0mon
-```
+### **Step 2: Configure WiFi Interface**
+1. **Enter Interface Name**:
+   - In the "Interface Config" panel
+   - Enter your monitor mode interface (e.g., `wlan0mon`)
+   - Click "STATUS" to verify system status
 
-### Performance Issues
-```bash
-# Run optimization
-python3 optimize.py
+### **Step 3: Discover Networks**
+1. **Click "SCAN NETWORKS"**:
+   - The system will scan for available WiFi networks
+   - Networks will appear in the "Network Discovery" panel
+   - Each network shows SSID, BSSID, channel, security, and signal strength
 
-# Check system resources
-htop
-iostat -x 1
+### **Step 4: Select Target**
+1. **Click on a Network**:
+   - Select your target network from the discovered list
+   - Target details will appear in the "Target Analysis" panel
+   - Verify target information is correct
 
-# Monitor network usage
-iftop -i wlan0mon
-```
+### **Step 5: Choose Attack Vectors**
+1. **Select Attack Methods**:
+   - Click on desired attack vectors in the "Target Analysis" panel
+   - Active vectors will be highlighted
+   - Choose multiple vectors for comprehensive testing
 
-## 📈 Performance
+### **Step 6: Execute Attack**
+1. **Click "EXECUTE ATTACK"**:
+   - A confirmation dialog will appear
+   - Review target and attack vectors
+   - Click "CONFIRM" to proceed
+   - Monitor progress in the "Activity Log" panel
 
-### Optimization Features
-- **Multi-threading** - Parallel processing for better performance
-- **Memory Management** - Efficient memory usage and garbage collection
-- **Process Pooling** - Reusable process pools for external tools
-- **Caching** - Intelligent caching of scan results
-- **Resource Limits** - Configurable resource usage limits
+### **Step 7: Monitor Results**
+1. **Watch Activity Log**:
+   - Real-time attack progress and results
+   - Success/failure notifications
+   - Detailed error messages if issues occur
 
-### Benchmarks
-Typical performance on modern hardware:
-- Network scan: 15-30 seconds for 50+ networks
-- Attack execution: <1 second startup time
-- Memory usage: 50-200MB depending on activity
-- CPU usage: 10-50% during active scanning
+---
 
-## 🤝 Contributing
+## 🔒 **Security and Legal Notice**
 
-### Development Setup
-```bash
-# Install development dependencies
-pip install -r requirements-dev.txt
+### **⚠️ IMPORTANT DISCLAIMER**
 
-# Run tests
-python3 test_comprehensive.py
+This tool is designed for **authorized penetration testing only**. Users must:
 
-# Format code
-black *.py
+- ✅ **Only test networks they own or have explicit permission to test**
+- ✅ **Comply with all local laws and regulations**
+- ✅ **Use responsibly and ethically**
+- ❌ **Never use for malicious purposes**
+- ❌ **Never test networks without permission**
 
-# Lint code
-flake8 *.py
-```
+### **Legal Requirements**
 
-### Code Style
-- Follow PEP 8 guidelines
-- Use type hints where appropriate
-- Document all public functions
-- Write comprehensive tests
-- Use meaningful variable names
+- **Authorization Required**: Only test networks you own or have written permission
+- **Local Laws**: Ensure compliance with your jurisdiction's laws
+- **Ethical Use**: Use for legitimate security testing purposes only
+- **Professional Responsibility**: Use your professional judgment and ethics
 
-## 📄 License
+---
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 🛠️ **Troubleshooting**
 
-## ⚠️ Disclaimer
+### **Common Issues**
 
-This software is for educational and authorized testing purposes only. Users are responsible for ensuring they have proper authorization before testing any networks. The authors are not responsible for any misuse of this software.
+#### **"No networks found" Error**
+- **Solution**: Ensure WiFi interface is in monitor mode
+- **Command**: `sudo airmon-ng start wlan0`
 
-## 🆘 Support
+#### **"Permission denied" Error**
+- **Solution**: Run with appropriate permissions
+- **Command**: `sudo python src/combined_dashboard.py`
 
-For support and questions:
-- Check the troubleshooting section
-- Review the test suite for examples
-- Examine the log files for error details
-- Ensure all dependencies are properly installed
+#### **"Interface not found" Error**
+- **Solution**: Check interface name and availability
+- **Command**: `iwconfig` or `ip link show`
 
-## 🔄 Changelog
+#### **Mobile/Pydroid Issues**
+- **Solution**: Ensure all dependencies are installed
+- **Check**: Python version compatibility
+- **Verify**: File permissions and paths
 
-### v2.0.0
-- Complete rewrite with enhanced security
-- New attack vectors (WPS, fragmentation)
-- Modern holographic dashboard
-- Improved performance and reliability
-- Comprehensive test suite
-- Desktop shortcut integration
-- Real-time monitoring system
+### **Performance Optimization**
 
-### v1.0.0
-- Initial release
-- Basic attack vectors
-- Simple web interface
-- Command-line interface
+- **Close Unused Applications**: Free up system resources
+- **Use Wired Connection**: For stable network access
+- **Monitor System Resources**: Check CPU and memory usage
+- **Update Dependencies**: Keep packages current
+
+---
+
+## 📊 **Technical Specifications**
+
+### **System Requirements**
+- **OS**: Linux (Ubuntu/Debian recommended)
+- **Python**: 3.8 or higher
+- **RAM**: 2GB minimum, 4GB recommended
+- **Storage**: 500MB free space
+- **Network**: WiFi interface with monitor mode support
+
+### **Dependencies**
+- **Flask**: Web framework
+- **Scapy**: Network packet manipulation
+- **Three.js**: 3D visualization (CDN)
+- **Chart.js**: Data visualization (CDN)
+
+### **Supported Attack Vectors**
+- **Deauthentication**: Disconnect clients from networks
+- **Handshake Capture**: Capture WPA/WPA2 handshakes
+- **Evil Twin**: Create fake access points
+- **Credential Harvesting**: Capture login credentials
+- **WPS Attacks**: Exploit WPS vulnerabilities
+- **Fragmentation**: Exploit fragmentation vulnerabilities
+
+---
+
+## 🤝 **Support and Contributing**
+
+### **Getting Help**
+- **Issues**: Report bugs and request features on GitHub
+- **Documentation**: Check this README for common solutions
+- **Community**: Join discussions in the project repository
+
+### **Contributing**
+1. **Fork the Repository**
+2. **Create Feature Branch**
+3. **Make Changes**
+4. **Test Thoroughly**
+5. **Submit Pull Request**
+
+---
+
+## 📄 **License**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🎉 **Acknowledgments**
+
+- **Three.js Community** for 3D visualization capabilities
+- **Flask Team** for the excellent web framework
+- **Security Community** for continuous improvement and feedback
+
+---
+
+<div align="center">
+
+**NET.KRAK v3.0 - Professional WiFi Penetration Testing Suite**
+
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-00f3ff?style=for-the-badge&logo=github)](https://github.com/blackarched/Net.Krk-v.1.0)
+[![Issues](https://img.shields.io/badge/Issues-Report-ff00ff?style=for-the-badge&logo=github)](https://github.com/blackarched/Net.Krk-v.1.0/issues)
+[![License](https://img.shields.io/badge/License-MIT-00ff9d?style=for-the-badge)](LICENSE)
+
+**Built with ❤️ for the Security Community**
+
+</div>

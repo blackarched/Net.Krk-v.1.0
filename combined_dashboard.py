@@ -852,29 +852,37 @@ def attack_dashboard():
                 
                 addLogEntry('info', `Executing ${selectedAttack} attack...`);
                 
-                fetch('/api/execute-attack', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        attack_type: selectedAttack
+                // Get available targets first
+                fetch('/api/targets')
+                    .then(response => response.json())
+                    .then(targetData => {
+                        const target = targetData.targets && targetData.targets.length > 0 ? targetData.targets[0] : null;
+                        
+                        return fetch('/api/execute-attack', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                attack_type: selectedAttack,
+                                target: target
+                            })
+                        });
                     })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        addLogEntry('success', `Attack completed: ${data.message}`);
-                    } else {
-                        addLogEntry('error', `Attack failed: ${data.error}`);
-                    }
-                })
-                .catch(error => {
-                    addLogEntry('error', `Attack failed: ${error.message}`);
-                })
-                .finally(() => {
-                    isAttacking = false;
-                    executeBtn.disabled = false;
-                    executeBtn.textContent = 'Execute Attack';
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            addLogEntry('success', `Attack completed: ${data.message}`);
+                        } else {
+                            addLogEntry('error', `Attack failed: ${data.error}`);
+                        }
+                    })
+                    .catch(error => {
+                        addLogEntry('error', `Attack failed: ${error.message}`);
+                    })
+                    .finally(() => {
+                        isAttacking = false;
+                        executeBtn.disabled = false;
+                        executeBtn.textContent = 'Execute Attack';
+                    });
             }
             
             function stopAllAttacks() {
@@ -918,6 +926,7 @@ def api_execute_attack():
     try:
         data = request.get_json()
         attack_type = data.get('attack_type')
+        target = data.get('target', {})
         
         if not attack_type:
             return jsonify({
@@ -925,13 +934,37 @@ def api_execute_attack():
                 'error': 'Missing attack type'
             })
         
-        result = execute_attack({'ssid': 'Test Network'}, attack_type)
+        # Use real target if provided, otherwise use first discovered network
+        if not target and discovered_networks:
+            target = discovered_networks[0]
+        elif not target:
+            target = {'ssid': 'Unknown', 'bssid': '00:00:00:00:00:00'}
+        
+        result = execute_attack(target, attack_type)
         return jsonify(result)
     except Exception as e:
         return jsonify({
             'status': 'error',
             'error': str(e)
         })
+
+@app.route('/api/targets')
+def api_targets():
+    """Get available targets from discovered networks"""
+    return jsonify({
+        'status': 'success',
+        'targets': discovered_networks
+    })
+
+@app.route('/api/attack-stats')
+def api_attack_stats():
+    """Get attack statistics"""
+    return jsonify({
+        'total_attacks': len(active_attacks),
+        'successful_attacks': len([a for a in active_attacks if a.get('status') == 'success']),
+        'active_attacks': 1 if is_attacking else 0,
+        'attack_types': list(set([a.get('attack_type', '') for a in active_attacks if a.get('attack_type')]))
+    })
 
 if __name__ == '__main__':
     print("🚀 Starting Net.Krk Combined Dashboard...")

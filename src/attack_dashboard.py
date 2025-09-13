@@ -55,13 +55,42 @@ def get_attack_stats():
 
 @app.route('/')
 def home():
-    return '''
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Net.Krk - Attack Dashboard</title>
+    # Read the new dashboard HTML file and modify for attack mode
+    try:
+        with open('new_dash.html', 'r') as f:
+            html_content = f.read()
+        
+        # Modify for attack dashboard
+        html_content = html_content.replace(
+            '<title>net.krak - WiFi Penetration Suite v2.0</title>',
+            '<title>net.krak - Attack Dashboard v2.0</title>'
+        )
+        
+        # Replace mock data with real API calls
+        html_content = html_content.replace(
+            '// Simulate API call with mock data\n                await new Promise(resolve => setTimeout(resolve, 3000));\n                \n                // Use mock networks for demonstration\n                const networks = mockNetworks;',
+            '''// Real API call
+                const response = await fetch('/api/scan');
+                const data = await response.json();
+                const networks = data.networks || [];'''
+        )
+        
+        # Add attack-specific modifications
+        html_content = html_content.replace(
+            'net.krak v2.0',
+            'net.krak ATTACK v2.0'
+        )
+        
+        return html_content
+    except FileNotFoundError:
+        # Fallback to original attack dashboard if new_dash.html not found
+        return '''
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Net.Krk - Attack Dashboard</title>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
             

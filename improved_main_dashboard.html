@@ -667,6 +667,10 @@
             loadInterfaces();
             getSystemStatus();
             addLogEntry('info', 'Analytics Dashboard initialized. Ready for network discovery.');
+            
+            // Start real-time log polling
+            fetchRealTimeLogs();
+            setInterval(fetchRealTimeLogs, 2000); // Update logs every 2 seconds
         }
 
         // Initialize holographic particles
@@ -1090,7 +1094,7 @@
             document.getElementById('scanStatus').textContent = isScanning ? 'Scanning' : 'Idle';
         }
 
-        // Add log entry
+        // Add log entry (local display)
         function addLogEntry(type, message) {
             const logContent = document.getElementById('logContent');
             const timestamp = new Date().toLocaleTimeString();
@@ -1099,6 +1103,30 @@
             entry.textContent = `[${timestamp}] [${type.toUpperCase()}] ${message}`;
             logContent.appendChild(entry);
             logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        // Fetch real-time logs from server
+        async function fetchRealTimeLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                const data = await response.json();
+                
+                if (data.logs && data.logs.length > 0) {
+                    const logContent = document.getElementById('logContent');
+                    logContent.innerHTML = '';
+                    
+                    data.logs.forEach(log => {
+                        const entry = document.createElement('div');
+                        entry.className = `log-entry ${log.type.toLowerCase()}`;
+                        entry.textContent = `[${log.timestamp}] [${log.type}] ${log.message}`;
+                        logContent.appendChild(entry);
+                    });
+                    
+                    logContent.scrollTop = logContent.scrollHeight;
+                }
+            } catch (error) {
+                console.error('Failed to fetch logs:', error);
+            }
         }
 
         // Clear logs

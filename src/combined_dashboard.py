@@ -16,10 +16,6 @@ active_attacks = []
 selected_target = None
 selected_attack = None
 
-def add_log_entry(type, message):
-    timestamp = time.strftime('%H:%M:%S')
-    print(f"[{timestamp}] [{type.upper()}] {message}")
-
 def scan_networks():
     global is_scanning, discovered_networks
     is_scanning = True
@@ -1146,10 +1142,17 @@ def api_scan_results():
     """Get current scan results"""
     global discovered_networks, is_scanning
     
-    # If scanning, update results with mock data
+    # If scanning, perform real network scan
     if is_scanning:
         try:
-            # Generate mock network data for demonstration
+            add_log_entry('info', 'Performing real network scan...')
+            # Use the real scan_networks function
+            real_networks = scan_networks()
+            discovered_networks = real_networks
+            add_log_entry('success', f'Real scan complete: {len(real_networks)} networks found')
+        except Exception as e:
+            add_log_entry('error', f'Real scan failed: {e}')
+            # Fallback to mock data only if real scan fails
             mock_networks = [
                 {
                     'ssid': 'NETGEAR_5G',
@@ -1168,43 +1171,38 @@ def api_scan_results():
                     'security': 'WPA3',
                     'frequency': '2437',
                     'encryption': 'AES'
-                },
-                {
-                    'ssid': 'TP-Link_AC1200',
-                    'bssid': '00:1c:2d:3e:4f:50',
-                    'channel': '11',
-                    'signal': '-38',
-                    'security': 'WPA2',
-                    'frequency': '2462',
-                    'encryption': 'TKIP+AES'
-                },
-                {
-                    'ssid': 'Hidden_Network',
-                    'bssid': '00:1d:2e:3f:40:51',
-                    'channel': '1',
-                    'signal': '-55',
-                    'security': 'WEP',
-                    'frequency': '2412',
-                    'encryption': 'WEP'
-                },
-                {
-                    'ssid': 'Office_WiFi',
-                    'bssid': '00:1e:2f:30:41:52',
-                    'channel': '149',
-                    'signal': '-67',
-                    'security': 'WPA2-Enterprise',
-                    'frequency': '5745',
-                    'encryption': 'AES'
                 }
             ]
             discovered_networks = mock_networks
-            add_log_entry('info', f'Found {len(discovered_networks)} networks')
-        except Exception as e:
-            add_log_entry('error', f'Scan error: {e}')
+            add_log_entry('warning', f'Using fallback data: {len(mock_networks)} networks')
     
     return jsonify({
         'networks': discovered_networks,
         'is_scanning': is_scanning
+    })
+
+# Global log storage
+log_entries = []
+
+def add_log_entry(type, message):
+    timestamp = time.strftime('%H:%M:%S')
+    log_entry = {
+        'timestamp': timestamp,
+        'type': type.upper(),
+        'message': message
+    }
+    log_entries.append(log_entry)
+    # Keep only last 100 entries
+    if len(log_entries) > 100:
+        log_entries.pop(0)
+    print(f"[{timestamp}] [{type.upper()}] {message}")
+
+@app.route('/api/logs')
+def api_get_logs():
+    """Get real-time log entries"""
+    return jsonify({
+        'logs': log_entries,
+        'count': len(log_entries)
     })
 
 if __name__ == '__main__':

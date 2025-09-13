@@ -103,12 +103,12 @@ def execute_attack(target, attack_type):
 def analytics_dashboard():
     # Read the new dashboard HTML file
     try:
-        # Try multiple possible paths for new_dash2.html
+        # Try multiple possible paths for improved_main_dashboard.html
         possible_paths = [
-            'fixed_main_dashboard.html',  # Current directory
-            '../fixed_main_dashboard.html',  # Parent directory
-            os.path.join(os.path.dirname(__file__), '..', 'fixed_main_dashboard.html'),  # Relative to this file
-            os.path.join(os.path.dirname(__file__), 'fixed_main_dashboard.html')  # Same directory as this file
+            'improved_main_dashboard.html',  # Current directory
+            '../improved_main_dashboard.html',  # Parent directory
+            os.path.join(os.path.dirname(__file__), '..', 'improved_main_dashboard.html'),  # Relative to this file
+            os.path.join(os.path.dirname(__file__), 'improved_main_dashboard.html')  # Same directory as this file
         ]
         
         html_content = None
@@ -116,13 +116,13 @@ def analytics_dashboard():
             try:
                 with open(path, 'r') as f:
                     html_content = f.read()
-                print(f"✅ Loaded fixed_main_dashboard.html from: {path}")
+                print(f"✅ Loaded improved_main_dashboard.html from: {path}")
                 break
             except FileNotFoundError:
                 continue
         
         if html_content is None:
-            raise FileNotFoundError("fixed_main_dashboard.html not found in any expected location")
+            raise FileNotFoundError("improved_main_dashboard.html not found in any expected location")
         
         # Replace mock data with real API calls
         html_content = html_content.replace(
@@ -583,12 +583,12 @@ def analytics_dashboard():
 def attack_dashboard():
     # Read the fixed attack dashboard HTML file
     try:
-        # Try multiple possible paths for fixed_attack_dashboard.html
+        # Try multiple possible paths for working_attack_dashboard.html
         possible_paths = [
-            'fixed_attack_dashboard.html',  # Current directory
-            '../fixed_attack_dashboard.html',  # Parent directory
-            os.path.join(os.path.dirname(__file__), '..', 'fixed_attack_dashboard.html'),  # Relative to this file
-            os.path.join(os.path.dirname(__file__), 'fixed_attack_dashboard.html')  # Same directory as this file
+            'working_attack_dashboard.html',  # Current directory
+            '../working_attack_dashboard.html',  # Parent directory
+            os.path.join(os.path.dirname(__file__), '..', 'working_attack_dashboard.html'),  # Relative to this file
+            os.path.join(os.path.dirname(__file__), 'working_attack_dashboard.html')  # Same directory as this file
         ]
         
         html_content = None
@@ -596,13 +596,13 @@ def attack_dashboard():
             try:
                 with open(path, 'r') as f:
                     html_content = f.read()
-                print(f"✅ Loaded fixed_attack_dashboard.html from: {path}")
+                print(f"✅ Loaded working_attack_dashboard.html from: {path}")
                 break
             except FileNotFoundError:
                 continue
         
         if html_content is None:
-            raise FileNotFoundError("fixed_attack_dashboard.html not found in any expected location")
+            raise FileNotFoundError("working_attack_dashboard.html not found in any expected location")
         
         # Return the attack dashboard as-is (no modifications needed)
         return html_content
@@ -1085,51 +1085,71 @@ def api_interfaces():
 
 @app.route('/api/monitor-mode', methods=['POST'])
 def api_monitor_mode():
-    """Enable/disable monitor mode for an interface"""
+    """Enable/disable monitor mode for an interface - COMPLETELY AUTOMATIC"""
     try:
         data = request.get_json()
-        interface = data.get('interface')
-        enable = data.get('enable', True)
+        interface = data.get('interface', 'wlan0')
+        automatic = data.get('automatic', False)
         
-        if not interface:
-            return jsonify({
-                'status': 'error',
-                'error': 'Interface name required'
-            })
+        # Check if already in monitor mode
+        result = subprocess.run(['iwconfig', interface], capture_output=True, text=True)
+        is_monitor = 'Mode:Monitor' in result.stdout
         
-        if enable:
-            # Enable monitor mode
-            result = subprocess.run(['sudo', 'airmon-ng', 'start', interface], 
-                                 capture_output=True, text=True)
-            if result.returncode == 0:
+        if is_monitor:
+            # Disable monitor mode - AUTOMATIC (no password required)
+            try:
+                subprocess.run(['airmon-ng', 'stop', interface], check=True, timeout=10)
+                add_log_entry('info', f'Monitor mode automatically disabled for {interface}')
                 return jsonify({
-                    'status': 'success',
-                    'message': f'Monitor mode enabled for {interface}',
-                    'interface': interface
+                    'success': True,
+                    'monitor_mode': False,
+                    'message': f'Monitor mode automatically disabled for {interface}'
                 })
-            else:
+            except subprocess.CalledProcessError:
+                # Try with sudo if regular command fails
+                subprocess.run(['sudo', 'airmon-ng', 'stop', interface], check=True, timeout=10)
+                add_log_entry('info', f'Monitor mode automatically disabled for {interface} (with sudo)')
                 return jsonify({
-                    'status': 'error',
-                    'error': f'Failed to enable monitor mode: {result.stderr}'
+                    'success': True,
+                    'monitor_mode': False,
+                    'message': f'Monitor mode automatically disabled for {interface}'
                 })
         else:
-            # Disable monitor mode
-            result = subprocess.run(['sudo', 'airmon-ng', 'stop', interface], 
-                                 capture_output=True, text=True)
-            if result.returncode == 0:
+            # Enable monitor mode - AUTOMATIC (no password required)
+            try:
+                subprocess.run(['airmon-ng', 'start', interface], check=True, timeout=10)
+                add_log_entry('info', f'Monitor mode automatically enabled for {interface}')
                 return jsonify({
-                    'status': 'success',
-                    'message': f'Monitor mode disabled for {interface}',
-                    'interface': interface
+                    'success': True,
+                    'monitor_mode': True,
+                    'message': f'Monitor mode automatically enabled for {interface}'
                 })
-            else:
+            except subprocess.CalledProcessError:
+                # Try with sudo if regular command fails
+                subprocess.run(['sudo', 'airmon-ng', 'start', interface], check=True, timeout=10)
+                add_log_entry('info', f'Monitor mode automatically enabled for {interface} (with sudo)')
                 return jsonify({
-                    'status': 'error',
-                    'error': f'Failed to disable monitor mode: {result.stderr}'
+                    'success': True,
+                    'monitor_mode': True,
+                    'message': f'Monitor mode automatically enabled for {interface}'
                 })
-    except Exception as e:
+            
+    except subprocess.TimeoutExpired:
+        add_log_entry('error', f'Monitor mode toggle timed out for {interface}')
         return jsonify({
-            'status': 'error',
+            'success': False,
+            'error': f'Monitor mode toggle timed out for {interface}'
+        })
+    except subprocess.CalledProcessError as e:
+        add_log_entry('error', f'Monitor mode toggle failed: {e}')
+        return jsonify({
+            'success': False,
+            'error': f'Failed to toggle monitor mode: {e}'
+        })
+    except Exception as e:
+        add_log_entry('error', f'Monitor mode error: {e}')
+        return jsonify({
+            'success': False,
             'error': str(e)
         })
 

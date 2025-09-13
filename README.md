@@ -13,6 +13,8 @@ NetKrak is a comprehensive Python suite for network analysis, penetration testin
 
 - **Advanced Network Discovery**: Scan networks using Scapy or Airodump-ng to find active devices, access points, and clients.
 - **Modern Web Dashboard**: A full-featured web UI to visualize network data, manage scans, and launch attacks from your browser.
+- **Separate Analytics & Attack Dashboards**: Dedicated interfaces for network analysis and attack execution with password protection.
+- **Real-time Network Scanning**: Live WiFi network discovery with signal strength visualization and security classification.
 - **Powerful CLI**: A comprehensive command-line interface (`orchestrator.py`) for scripting, automation, and headless operation.
 - **Multiple Attack Vectors**:
     - Deauthentication Attacks
@@ -35,12 +37,18 @@ The project has been reorganized into a clean, modular structure:
 │   ├── dashboard_api.py  # Backend for the web UI
 │   ├── orchestrator.py   # Main CLI application
 │   ├── scanner.py
+│   ├── combined_dashboard.py    # Combined analytics & attack dashboard
+│   ├── analytics_dashboard.py   # Standalone analytics dashboard
+│   ├── attack_dashboard.py      # Standalone attack dashboard
 │   └── utils/
 ├── web/                  # Web frontend files
 │   ├── templates/        # HTML templates
 │   └── static/           # CSS, JS, and other static assets (if any)
 ├── scripts/              # Helper scripts
 ├── tests/                # (Currently a work in progress)
+├── test_dashboards.py    # Dashboard testing suite
+├── verify_dashboards.py  # Dashboard verification script
+├── DASHBOARD_README.md   # Detailed dashboard documentation
 ├── Dockerfile
 ├── docker-compose.yml
 └── requirements.txt
@@ -81,7 +89,47 @@ sudo python -m src.dashboard_api
 ```
 Then, open your browser to `http://127.0.0.1:5000`.
 
-### 2. Command-Line Interface (CLI)
+### 2. New Dashboard System
+
+The project now includes separate, specialized dashboards for different use cases:
+
+#### Combined Dashboard (Recommended)
+```bash
+python src/combined_dashboard.py
+```
+- Access: `http://localhost:5000`
+- Features both analytics and attack modules
+- Real-time network scanning with live data
+- Mobile-optimized responsive design
+
+#### Analytics Dashboard
+```bash
+python src/analytics_dashboard.py
+```
+- Access: `http://localhost:5000`
+- Focused on network discovery and analysis
+- Signal strength visualization
+- Live statistics and monitoring
+
+#### Attack Dashboard
+```bash
+python src/attack_dashboard.py
+```
+- Access: `http://localhost:5001` (Password: `netkrak2024`)
+- Dedicated attack module interface
+- Target selection and execution
+- Attack monitoring and results
+
+#### Testing and Verification
+```bash
+# Test dashboard functionality
+python test_dashboards.py
+
+# Verify dashboard structure
+python verify_dashboards.py
+```
+
+### 3. Command-Line Interface (CLI)
 
 The CLI is ideal for automation and scripting. It is managed via `orchestrator.py`.
 

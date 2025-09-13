@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk Network Discovery</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;500&display=swap');
+        
+        :root {
+            --neon-cyan: #0ff;
+            --neon-pink: #f0f;
+            --neon-green: #0f0;
+            --dark-bg: #0a0a12;
+            --darker-bg: #050509;
+            --panel-bg: rgba(16, 16, 32, 0.85);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: var(--darker-bg);
+            font-family: 'Share Tech Mono', monospace;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(48, 0, 96, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0, 96, 96, 0.4) 0%, transparent 50%);
+            z-index: -1;
+        }
+        
+        .hologram-container {
+            perspective: 1000px;
+            width: 90%;
+            max-width: 1200px;
+        }
+        
+        .hologram {
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            box-shadow: 
+                0 0 15px rgba(0, 255, 255, 0.3),
+                inset 0 0 20px rgba(0, 255, 255, 0.1);
+            padding: 20px;
+            transform: rotateX(5deg);
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hologram::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            animation: scan 8s linear infinite;
+            z-index: 0;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateY(-100%) rotate(45deg); }
+            100% { transform: translateY(100%) rotate(45deg); }
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--neon-cyan);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 5px var(--neon-cyan);
+            letter-spacing: 1px;
+        }
+        
+        .signal-indicator {
+            display: flex;
+            align-items: center;
+            color: var(--neon-green);
+        }
+        
+        .signal-bars {
+            display: flex;
+            align-items: flex-end;
+            margin-right: 8px;
+            height: 20px;
+        }
+        
+        .bar {
+            width: 4px;
+            background-color: var(--neon-green);
+            margin-right: 2px;
+            box-shadow: 0 0 4px var(--neon-green);
+        }
+        
+        .bar:nth-child(1) { height: 5px; }
+        .bar:nth-child(2) { height: 10px; }
+        .bar:nth-child(3) { height: 15px; }
+        .bar:nth-child(4) { height: 20px; }
+        
+        /* New layout for 3D hologram and network details */
+        .content-area {
+            display: flex;
+            gap: 20px;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 20px;
+        }
+        
+        .hologram-display {
+            flex: 1;
+            position: relative;
+            height: 350px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            background: radial-gradient(ellipse at bottom, rgba(0, 255, 255, 0.1) 0%, transparent 70%);
+        }
+        
+        #hologram-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .network-info-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            max-height: 350px;
+            padding-right: 10px;
+        }
+        
+        .network-info-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .network-info-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .network-info-panel::-webkit-scrollbar-thumb {
+            background-color: var(--neon-cyan);
+            border-radius: 4px;
+        }
+        
+        .info-header {
+            font-size: 1.5rem;
+            text-shadow: 0 0 7px var(--neon-cyan);
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-pink);
+        }
+        
+        .status-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            background-color: rgba(0, 255, 255, 0.05);
+            padding: 8px 12px;
+            border-radius: 4px;
+            border-left: 3px solid var(--neon-cyan);
+            transition: all 0.3s ease;
+        }
+        
+        .info-item:hover {
+            background-color: rgba(0, 255, 255, 0.15);
+            transform: translateX(5px);
+        }
+        
+        .info-label {
+            color: rgba(255, 255, 255, 0.7);
+            margin-right: 1rem;
+        }
+        
+        .info-value {
+            color: var(--neon-green);
+            text-shadow: 0 0 3px var(--neon-green);
+            text-align: right;
+        }
+        
+        .network-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .network-card {
+            background: rgba(10, 15, 30, 0.7);
+            border: 1px solid rgba(0, 200, 255, 0.2);
+            border-radius: 6px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .network-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px rgba(0, 200, 255, 0.4);
+            border-color: rgba(0, 200, 255, 0.5);
+        }
+        
+        .network-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            opacity: 0.7;
+        }
+        
+        .network-name {
+            font-size: 1.2rem;
+            color: var(--neon-pink);
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px var(--neon-pink);
+            font-family: 'Orbitron', sans-serif;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .network-details {
+            font-size: 0.9rem;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            padding-bottom: 3px;
+            border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+        }
+        
+        .detail-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .detail-value {
+            color: var(--neon-green);
+            text-shadow: 0 0 2px var(--neon-green);
+        }
+        
+        .channel-indicator {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+        
+        .channel-value {
+            margin-right: 10px;
+        }
+        
+        .channel-visual {
+            height: 5px;
+            flex-grow: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .channel-fill {
+            height: 100%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 4px var(--neon-cyan);
+            width: 40%;
+        }
+        
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--neon-cyan);
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .scan-button {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Share Tech Mono', monospace;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+        
+        .scan-button:hover {
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+        
+        .glow-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .glow-effect::before,
+        .glow-effect::after {
+            content: '';
+            position: absolute;
+            background: radial-gradient(circle at center, rgba(0, 255, 255, 0.4) 0%, transparent 70%);
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+        
+        .glow-effect::before {
+            top: -100px;
+            left: -100px;
+        }
+        
+        .glow-effect::after {
+            bottom: -100px;
+            right: -100px;
+            background: radial-gradient(circle at center, rgba(240, 0, 255, 0.4) 0%, transparent 70%);
+        }
+        
+        /* Cyberpunk diagonal lines pattern */
+        .cyberpunk-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, rgba(0, 0, 0, 0.1) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.1) 75%, rgba(0, 0, 0, 0.1)),
+                linear-gradient(-45deg, rgba(0, 0, 0, 0.1) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.1) 75%, rgba(0, 0, 0, 0.1));
+            background-size: 20px 20px;
+            opacity: 0.2;
+            z-index: -1;
+        }
+        
+        /* Scanlines for the hologram display */
+        .hologram-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: linear-gradient(
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.25) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.06),
+                rgba(0, 255, 0, 0.02),
+                rgba(0, 0, 255, 0.06)
+            );
+            background-size: 100% 3px, 5px 100%;
+            z-index: 2;
+            pointer-events: none;
+            animation: scanlines 5s linear infinite;
+        }
+        
+        @keyframes scanlines {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 0% 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="hologram-container">
+        <div class="hologram">
+            <div class="cyberpunk-pattern"></div>
+            <div class="glow-effect"></div>
+            
+            <div class="panel-header">
+                <h2 class="panel-title">NETWORK DISCOVERY v3.4</h2>
+                <div class="signal-indicator">
+                    <div class="signal-bars">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                    <span>ACTIVE SCAN</span>
+                </div>
+            </div>
+            
+            <!-- New content area with 3D hologram and network info -->
+            <div class="content-area">
+                <!-- 3D Hologram Display -->
+                <div class="hologram-display">
+                    <canvas id="hologram-canvas"></canvas>
+                </div>
+                
+                <!-- Network Info Panel -->
+                <div class="network-info-panel">
+                    <div class="info-header">
+                        <div class="status-light"></div>
+                        <span id="network-name">CYBERCORE-NEXUS</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">BSSID</span>
+                        <span id="bssid" class="info-value">0A:11:22:33:44:55</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">IP Address</span>
+                        <span id="ip-address" class="info-value">192.168.4.101</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Subnet Mask</span>
+                        <span id="subnet" class="info-value">255.255.255.0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Channel</span>
+                        <span id="channel" class="info-value">11</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Frequency</span>
+                        <span id="frequency" class="info-value">2.4 GHz</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Signal Strength</span>
+                        <span id="signal" class="info-value">-45 dBm</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Security</span>
+                        <span id="security" class="info-value">WPA3-Personal</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">MAC Address</span>
+                        <span id="mac" class="info-value">F8:E4:3B:9A:0C:7D</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Original network grid (preserved) -->
+            <div class="network-grid">
+                <!-- Network Card 1 -->
+                <div class="network-card">
+                    <h3 class="network-name">CYBERDINE_5GHz</h3>
+                    <div class="network-details">
+                        <div class="detail-row">
+                            <span class="detail-label">BSSID:</span>
+                            <span class="detail-value">A0:B1:C2:D3:E4:F5</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">IP:</span>
+                            <span class="detail-value">192.168.1.45</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Security:</span>
+                            <span class="detail-value">WPA3</span>
+                        </div>
+                        <div class="channel-indicator">
+                            <span class="channel-value">CH: 36</span>
+                            <div class="channel-visual">
+                                <div class="channel-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Network Card 2 -->
+                <div class="network-card">
+                    <h3 class="network-name">Tyrell_Corp_Guest</h3>
+                    <div class="network-details">
+                        <div class="detail-row">
+                            <span class="detail-label">BSSID:</span>
+                            <span class="detail-value">F4:E3:D2:C1:B0:A9</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">IP:</span>
+                            <span class="detail-value">10.0.0.128</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Security:</span>
+                            <span class="detail-value">WPA2</span>
+                        </div>
+                        <div class="channel-indicator">
+                            <span class="channel-value">CH: 11</span>
+                            <div class="channel-visual">
+                                <div class="channel-fill" style="width: 70%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Network Card 3 -->
+                <div class="network-card">
+                    <h3 class="network-name">OCP_Corporate</h3>
+                    <div class="network-details">
+                        <div class="detail-row">
+                            <span class="detail-label">BSSID:</span>
+                            <span class="detail-value">12:34:56:78:90:AB</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">IP:</span>
+                            <span class="detail-value">172.16.32.101</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Security:</span>
+                            <span class="detail-value">WPA2-Enterprise</span>
+                        </div>
+                        <div class="channel-indicator">
+                            <span class="channel-value">CH: 149</span>
+                            <div class="channel-visual">
+                                <div class="channel-fill" style="width: 30%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Network Card 4 -->
+                <div class="network-card">
+                    <h3 class="network-name">Skynet_Global</h3>
+                    <div class="network-details">
+                        <div class="detail-row">
+                            <span class="detail-label">BSSID:</span>
+                            <span class="detail-value">CD:EF:01:23:45:67</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">IP:</span>
+                            <span class="detail-value">10.42.100.1</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Security:</span>
+                            <span class="detail-value">WPA3</span>
+                        </div>
+                        <div class="channel-indicator">
+                            <span class="channel-value">CH: 48</span>
+                            <div class="channel-visual">
+                                <div class="channel-fill" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <div>Last scan: 22:47:13</div>
+                <button class="scan-button">Rescan</button>
+                <div>Networks: 4 visible</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Mock Data --- 
+        const mockNetworks = [
+            { name: "CYBERCORE-NEXUS", bssid: "0A:11:22:33:44:55", ip: "192.168.4.101", subnet: "255.255.255.0", channel: 11, frequency: "2.4", signal: -45, security: "WPA3-Personal", mac: "F8:E4:3B:9A:0C:7D" },
+            { name: "GHOST_SIGNAL_5G", bssid: "B2:99:88:77:66:55", ip: "10.0.1.58", subnet: "255.255.255.0", channel: 149, frequency: "5.0", signal: -62, security: "WPA3-Enterprise", mac: "C0:3E:BA:4F:11:22" },
+            { name: "DataHaven-7", bssid: "C3:AA:BB:CC:DD:EE", ip: "172.16.0.23", subnet: "255.255.0.0", channel: 6, frequency: "2.4", signal: -78, security: "WPA2-Personal", mac: "A0:B1:C2:D3:E4:F5" },
+            { name: "NetRunner_Zero", bssid: "D4:FF:00:11:22:33", ip: "192.168.1.12", subnet: "255.255.255.0", channel: 44, frequency: "5.0", signal: -51, security: "WPA3-Personal", mac: "00:1A:2B:3C:4D:5E" },
+            { name: "Public_Grid_04", bssid: "E5:00:11:22:33:44", ip: "10.100.1.3", subnet: "255.255.255.128", channel: 1, frequency: "2.4", signal: -85, security: "Open", mac: "11:22:33:44:55:66" }
+        ];
+        let currentNetworkIndex = 0;
+
+        // --- UI Update Function ---
+        function updateNetworkInfo(network) {
+            document.getElementById('network-name').textContent = network.name;
+            document.getElementById('bssid').textContent = network.bssid;
+            document.getElementById('ip-address').textContent = network.ip;
+            document.getElementById('subnet').textContent = network.subnet;
+            document.getElementById('channel').textContent = network.channel;
+            document.getElementById('frequency').textContent = `${network.frequency} GHz`;
+            document.getElementById('signal').textContent = `${network.signal} dBm`;
+            document.getElementById('security').textContent = network.security;
+            document.getElementById('mac').textContent = network.mac;
+        }
+
+        // --- Simulate Network Discovery ---
+        setInterval(() => {
+            currentNetworkIndex = (currentNetworkIndex + 1) % mockNetworks.length;
+            updateNetworkInfo(mockNetworks[currentNetworkIndex]);
+        }, 5000); // Switch network every 5 seconds
+
+        // --- three.js Hologram ---
+        const canvas = document.getElementById('hologram-canvas');
+        const container = canvas.parentElement;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.z = 3.5;
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        
+        // Resize handler
+        window.addEventListener('resize', () => {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            renderer.setSize(width, height);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+        });
+
+        // Hologram objects
+        const group = new THREE.Group();
+        scene.add(group);
+
+        const geo = new THREE.IcosahedronGeometry(1.5, 1);
+        
+        // Inner object
+        const innerMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3
+        });
+        const innerSphere = new THREE.Mesh(geo, innerMaterial);
+        group.add(innerSphere);
+        
+        // Outer object
+        const outerMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.1
+        });
+        const outerSphere = new THREE.Mesh(geo, outerMaterial);
+        outerSphere.scale.set(1.2, 1.2, 1.2);
+        group.add(outerSphere);
+        
+        // Particle system
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCnt = 1500;
+        const posArray = new Float32Array(particlesCnt * 3);
+        
+        for(let i=0; i < particlesCnt * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 5;
+        }
+        
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.008,
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.8
+        });
+        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particles);
+
+        // Animation Loop
+        const clock = new THREE.Clock();
+        function animate() {
+            const elapsedTime = clock.getElapsedTime();
+            
+            group.rotation.y = elapsedTime * 0.2;
+            group.rotation.x = elapsedTime * 0.1;
+            
+            particles.rotation.y = -elapsedTime * 0.05;
+
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Original functionality
+        // Simple animation for the scan button
+        document.querySelector('.scan-button').addEventListener('click', function() {
+            this.textContent = 'SCANNING...';
+            this.style.boxShadow = '0 0 15px var(--neon-cyan)';
+            
+            // Update network info on scan
+            currentNetworkIndex = (currentNetworkIndex + 1) % mockNetworks.length;
+            updateNetworkInfo(mockNetworks[currentNetworkIndex]);
+            
+            // Update last scan time
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+            document.querySelector('.footer div:first-child').textContent = `Last scan: ${timeString}`;
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+                this.textContent = 'Rescan';
+                this.style.boxShadow = '';
+            }, 2000);
+        });
+        
+        // Add subtle hover effect to the entire hologram
+        const hologram = document.querySelector('.hologram');
+        hologram.addEventListener('mousemove', function(e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            this.style.transform = `rotateX(5deg) rotateY(${(x - rect.width/2) / 100}deg) rotateX(${-(y - rect.height/2) / 100}deg)`;
+        });
+        
+        hologram.addEventListener('mouseleave', function() {
+            this.style.transform = 'rotateX(5deg)';
+        });
+
+        // Set initial data
+        updateNetworkInfo(mockNetworks[0]);
+    </script>
+</body>
+</html>

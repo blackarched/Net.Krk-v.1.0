@@ -105,10 +105,10 @@ def analytics_dashboard():
     try:
         # Try multiple possible paths for new_dash2.html
         possible_paths = [
-            'new_dash2.html',  # Current directory
-            '../new_dash2.html',  # Parent directory
-            os.path.join(os.path.dirname(__file__), '..', 'new_dash2.html'),  # Relative to this file
-            os.path.join(os.path.dirname(__file__), 'new_dash2.html')  # Same directory as this file
+            'fixed_main_dashboard.html',  # Current directory
+            '../fixed_main_dashboard.html',  # Parent directory
+            os.path.join(os.path.dirname(__file__), '..', 'fixed_main_dashboard.html'),  # Relative to this file
+            os.path.join(os.path.dirname(__file__), 'fixed_main_dashboard.html')  # Same directory as this file
         ]
         
         html_content = None
@@ -116,13 +116,13 @@ def analytics_dashboard():
             try:
                 with open(path, 'r') as f:
                     html_content = f.read()
-                print(f"✅ Loaded new_dash2.html from: {path}")
+                print(f"✅ Loaded fixed_main_dashboard.html from: {path}")
                 break
             except FileNotFoundError:
                 continue
         
         if html_content is None:
-            raise FileNotFoundError("new_dash2.html not found in any expected location")
+            raise FileNotFoundError("fixed_main_dashboard.html not found in any expected location")
         
         # Replace mock data with real API calls
         html_content = html_content.replace(
@@ -585,10 +585,10 @@ def attack_dashboard():
     try:
         # Try multiple possible paths for new_dash2.html
         possible_paths = [
-            'new_dash2.html',  # Current directory
-            '../new_dash2.html',  # Parent directory
-            os.path.join(os.path.dirname(__file__), '..', 'new_dash2.html'),  # Relative to this file
-            os.path.join(os.path.dirname(__file__), 'new_dash2.html')  # Same directory as this file
+            'fixed_main_dashboard.html',  # Current directory
+            '../fixed_main_dashboard.html',  # Parent directory
+            os.path.join(os.path.dirname(__file__), '..', 'fixed_main_dashboard.html'),  # Relative to this file
+            os.path.join(os.path.dirname(__file__), 'fixed_main_dashboard.html')  # Same directory as this file
         ]
         
         html_content = None
@@ -596,13 +596,13 @@ def attack_dashboard():
             try:
                 with open(path, 'r') as f:
                     html_content = f.read()
-                print(f"✅ Loaded new_dash2.html from: {path}")
+                print(f"✅ Loaded fixed_main_dashboard.html from: {path}")
                 break
             except FileNotFoundError:
                 continue
         
         if html_content is None:
-            raise FileNotFoundError("new_dash2.html not found in any expected location")
+            raise FileNotFoundError("fixed_main_dashboard.html not found in any expected location")
         
         # Modify for attack dashboard
         html_content = html_content.replace(
@@ -1175,6 +1175,50 @@ def api_monitor_mode():
             'status': 'error',
             'error': str(e)
         })
+
+@app.route('/api/start-scan', methods=['POST'])
+def api_start_scan():
+    """Start network scanning"""
+    global is_scanning
+    try:
+        data = request.get_json()
+        interface = data.get('interface', 'wlan0')
+        
+        if is_scanning:
+            return jsonify({'success': False, 'error': 'Scan already in progress'})
+        
+        # Start scanning in background
+        is_scanning = True
+        add_log_entry('info', f'Starting network scan on {interface}')
+        
+        return jsonify({'success': True, 'message': 'Scan started'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/stop-scan', methods=['POST'])
+def api_stop_scan():
+    """Stop network scanning"""
+    global is_scanning
+    is_scanning = False
+    add_log_entry('info', 'Network scan stopped')
+    return jsonify({'success': True, 'message': 'Scan stopped'})
+
+@app.route('/api/scan-results')
+def api_scan_results():
+    """Get current scan results"""
+    global discovered_networks, is_scanning
+    
+    # If scanning, update results
+    if is_scanning:
+        try:
+            discovered_networks = scan_networks()
+        except:
+            pass
+    
+    return jsonify({
+        'networks': discovered_networks,
+        'is_scanning': is_scanning
+    })
 
 if __name__ == '__main__':
     print("🚀 Starting Net.Krk Combined Dashboard...")

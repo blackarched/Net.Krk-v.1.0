@@ -58,7 +58,11 @@ A comprehensive, hardened WiFi penetration testing suite with enhanced attack ve
 
 ## 🛠️ Installation
 
+> **📋 Installation Matrix**: For detailed installation instructions across different environments, see [INSTALLATION_MATRIX.md](INSTALLATION_MATRIX.md)
+
 ### Quick Start (Docker)
+
+#### Docker Compose (Recommended)
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -70,6 +74,41 @@ sudo docker-compose up -d
 # Access the dashboard
 open http://localhost:5000
 ```
+
+#### Docker Run (Manual)
+For full functionality, use these specific flags:
+```bash
+# Full functionality with all capabilities
+docker run -it --rm \
+  --cap-add=NET_ADMIN --cap-add=NET_RAW \
+  --device /dev/net/tun \
+  --network host \
+  -v /path/to/captures:/app/captures \
+  -v /var/run/dbus:/var/run/dbus \
+  --name netkrak netkrak:latest
+
+# Alternative without --network host (limited functionality)
+docker run -it --rm \
+  --cap-add=NET_ADMIN --cap-add=NET_RAW \
+  --device /dev/net/tun \
+  -v /path/to/captures:/app/captures \
+  -v /var/run/dbus:/var/run/dbus \
+  --name netkrak netkrak:latest
+```
+
+**Important Docker Flags Explained:**
+- `--cap-add=NET_ADMIN --cap-add=NET_RAW`: Required for wireless interface management and packet capture
+- `--device /dev/net/tun`: Access to TUN/TAP devices for network operations
+- `--network host`: **Required for many wireless operations** - allows container to see host network interfaces
+- `-v /path/to/captures:/app/captures`: Persistent storage for captured handshakes and data
+- `-v /var/run/dbus:/var/run/dbus`: Access to system D-Bus for hardware management
+
+**Why --network host is required:**
+The `--network host` flag is essential for wireless penetration testing because:
+- Wireless interfaces (wlan0, wlan0mon) are typically only visible on the host network
+- Many wireless tools (airodump-ng, aircrack-ng) require direct access to physical interfaces
+- Monitor mode operations need raw access to the host's network stack
+- If you must avoid `--network host`, you'll need to manually map hardware interfaces using `--device` flags
 
 ### Manual Installation
 ```bash
@@ -106,6 +145,9 @@ sudo python3 dashboard_api.py
 
 ### Command Line Interface
 ```bash
+# Run system diagnostics (NEW!)
+sudo python3 orchestrator.py diagnostics
+
 # List available interfaces
 sudo python3 orchestrator.py list-interfaces
 

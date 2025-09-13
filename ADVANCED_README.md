@@ -147,6 +147,35 @@ Machine learning-powered vulnerability analysis:
 - No additional dependencies required
 
 ### Installation
+
+#### Docker (Recommended for Full Suite)
+```bash
+# Clone the repository
+git clone <repository-url>
+cd net.krak
+
+# Build and run with Docker Compose (includes advanced tools)
+sudo docker-compose up -d
+
+# Access the advanced dashboard
+open http://localhost:5000/advanced
+```
+
+#### Docker Run (Manual - Full Functionality)
+```bash
+# Full functionality with all capabilities
+docker run -it --rm \
+  --cap-add=NET_ADMIN --cap-add=NET_RAW \
+  --device /dev/net/tun \
+  --network host \
+  -v /path/to/captures:/app/captures \
+  -v /var/run/dbus:/var/run/dbus \
+  --name netkrak netkrak:latest
+
+# Access advanced features at http://localhost:5000/advanced
+```
+
+#### Standalone (Advanced Tools Only)
 1. Clone or download the repository
 2. Navigate to the advanced features directory
 3. Open `advanced_index.html` in your web browser

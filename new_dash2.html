@@ -436,7 +436,8 @@
 
         /* Enhanced Network Discovery */
         .network-discovery {
-            height: 200px;
+            height: 500px;
+            min-height: 500px;
             overflow-y: auto;
             margin-bottom: 20px;
         }
@@ -486,8 +487,37 @@
         .network-ssid {
             font-weight: 600;
             color: #ffffff;
-            margin-bottom: 8px;
-            font-size: 16px;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .network-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .network-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        .detail-label {
+            color: var(--neon-blue);
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .detail-value {
+            color: var(--neon-green);
+            font-weight: 600;
+            font-size: 12px;
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
         }
 
@@ -1179,6 +1209,12 @@
             </div>
         </header>
 
+        <!-- 3D Network Map -->
+        <div class="holographic-panel network-map-panel">
+            <div class="panel-header">3D Network Map</div>
+            <div id="networkMap3D" style="width: 100%; height: 300px; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--neon-green); border-radius: 4px;"></div>
+        </div>
+
         <div class="holographic-panel scanner-panel">
             <div class="panel-header">Network Discovery</div>
             <div class="network-discovery" id="networkDiscovery">
@@ -1633,11 +1669,24 @@
                         
                         networkElement.innerHTML = `
                             <div class="network-ssid">${net.ssid || '<em>&lt;hidden&gt;</em>'}</div>
-                            <div class="network-meta">
-                                <span>BSSID: ${net.bssid}</span>
-                                <span>Chan: ${net.channel || '?'} | ${net.security || '?'}</span>
+                            <div class="network-details">
+                                <div class="network-detail">
+                                    <span class="detail-label">BSSID:</span>
+                                    <span class="detail-value">${net.bssid || 'Unknown'}</span>
+                                </div>
+                                <div class="network-detail">
+                                    <span class="detail-label">Channel:</span>
+                                    <span class="detail-value">${net.channel || 'Unknown'}</span>
+                                </div>
+                                <div class="network-detail">
+                                    <span class="detail-label">Security:</span>
+                                    <span class="detail-value">${net.security || 'Unknown'}</span>
+                                </div>
+                                <div class="network-detail">
+                                    <span class="detail-label">Signal:</span>
+                                    <span class="detail-value">${net.rssi || 'Unknown'} dBm</span>
+                                </div>
                             </div>
-                            ${rssiDisplay}
                         `;
                         networkElement.addEventListener('click', () => selectNetwork(networkElement));
                         discoveryContainer.appendChild(networkElement);
@@ -1809,6 +1858,70 @@
             } catch (e) {
                 addLogEntry('error', `Stop attacks failed: ${e.message}`);
             }
+        }
+
+        // Initialize 3D Network Map
+        function init3DNetworkMap() {
+            const container = document.getElementById('networkMap3D');
+            if (!container) return;
+
+            // Create scene
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
+            renderer.setClearColor(0x000000, 0);
+            container.appendChild(renderer.domElement);
+
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0x00f3ff, 1);
+            directionalLight.position.set(10, 10, 5);
+            scene.add(directionalLight);
+
+            // Create network nodes
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 5 + Math.random() * 3;
+                const x = Math.cos(angle) * radius;
+                const z = Math.sin(angle) * radius;
+                const y = (Math.random() - 0.5) * 4;
+
+                const nodeGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+                const nodeMaterial = new THREE.MeshPhongMaterial({ 
+                    color: new THREE.Color().setHSL(Math.random(), 0.7, 0.6),
+                    emissive: new THREE.Color().setHSL(Math.random(), 0.5, 0.1)
+                });
+                const node = new THREE.Mesh(nodeGeometry, nodeMaterial);
+                node.position.set(x, y, z);
+                scene.add(node);
+
+                // Add connection line
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, 0, 0),
+                    new THREE.Vector3(x, y, z)
+                ]);
+                const lineMaterial = new THREE.LineBasicMaterial({ 
+                    color: 0x00ff9d, 
+                    transparent: true, 
+                    opacity: 0.6 
+                });
+                const line = new THREE.Line(lineGeometry, lineMaterial);
+                scene.add(line);
+            }
+
+            // Position camera
+            camera.position.z = 15;
+            
+            // Animate
+            function animate() {
+                requestAnimationFrame(animate);
+                scene.rotation.y += 0.005;
+                renderer.render(scene, camera);
+            }
+            animate();
         }
 
         // --- 3D Network Map Functions ---
@@ -2162,6 +2275,9 @@
             
             // Initialize the network map
             setTimeout(initNetworkMap, 500);
+            
+            // Initialize 3D network map
+            init3DNetworkMap();
         }
 
         // Initialize the dashboard when the DOM is loaded.

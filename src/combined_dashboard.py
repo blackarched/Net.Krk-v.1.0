@@ -103,7 +103,7 @@ def execute_attack(target, attack_type):
 def analytics_dashboard():
     # Read the new dashboard HTML file
     try:
-        with open('new_dash2.html', 'r') as f:
+        with open('../new_dash2.html', 'r') as f:
             html_content = f.read()
         
         # Replace mock data with real API calls
@@ -565,7 +565,7 @@ def analytics_dashboard():
 def attack_dashboard():
     # Read the new dashboard HTML file and modify for attack mode
     try:
-        with open('new_dash2.html', 'r') as f:
+        with open('../new_dash2.html', 'r') as f:
             html_content = f.read()
         
         # Modify for attack dashboard
@@ -1057,6 +1057,88 @@ def api_attack_stats():
         'active_attacks': 1 if is_attacking else 0,
         'attack_types': list(set([a.get('attack_type', '') for a in active_attacks if a.get('attack_type')]))
     })
+
+@app.route('/api/interfaces')
+def api_interfaces():
+    """Get available WiFi interfaces"""
+    try:
+        # Get all network interfaces
+        result = subprocess.run(['iwconfig'], capture_output=True, text=True)
+        interfaces = []
+        
+        if result.returncode == 0:
+            lines = result.stdout.split('\n')
+            for line in lines:
+                if 'IEEE 802.11' in line and 'ESSID:' in line:
+                    # Extract interface name
+                    iface_name = line.split()[0]
+                    # Check if it's in monitor mode
+                    is_monitor = 'Mode:Monitor' in line
+                    interfaces.append({
+                        'name': iface_name,
+                        'is_monitor': is_monitor,
+                        'status': 'Monitor Mode' if is_monitor else 'Managed Mode'
+                    })
+        
+        return jsonify({
+            'status': 'success',
+            'interfaces': interfaces
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        })
+
+@app.route('/api/monitor-mode', methods=['POST'])
+def api_monitor_mode():
+    """Enable/disable monitor mode for an interface"""
+    try:
+        data = request.get_json()
+        interface = data.get('interface')
+        enable = data.get('enable', True)
+        
+        if not interface:
+            return jsonify({
+                'status': 'error',
+                'error': 'Interface name required'
+            })
+        
+        if enable:
+            # Enable monitor mode
+            result = subprocess.run(['sudo', 'airmon-ng', 'start', interface], 
+                                 capture_output=True, text=True)
+            if result.returncode == 0:
+                return jsonify({
+                    'status': 'success',
+                    'message': f'Monitor mode enabled for {interface}',
+                    'interface': interface
+                })
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'error': f'Failed to enable monitor mode: {result.stderr}'
+                })
+        else:
+            # Disable monitor mode
+            result = subprocess.run(['sudo', 'airmon-ng', 'stop', interface], 
+                                 capture_output=True, text=True)
+            if result.returncode == 0:
+                return jsonify({
+                    'status': 'success',
+                    'message': f'Monitor mode disabled for {interface}',
+                    'interface': interface
+                })
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'error': f'Failed to disable monitor mode: {result.stderr}'
+                })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        })
 
 if __name__ == '__main__':
     print("🚀 Starting Net.Krk Combined Dashboard...")

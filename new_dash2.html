@@ -679,6 +679,51 @@
             box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
             background: rgba(255, 0, 255, 0.15);
         }
+        
+        .interface-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .interface-selector select {
+            flex: 1;
+        }
+        
+        .small-button {
+            padding: 8px 16px;
+            font-size: 12px;
+            min-width: auto;
+        }
+        
+        .monitor-controls {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .monitor-button {
+            background: linear-gradient(45deg, var(--neon-green), var(--neon-blue));
+            border: 1px solid var(--neon-green);
+            color: #000;
+            font-weight: 600;
+            padding: 8px 16px;
+            font-size: 12px;
+            min-width: auto;
+        }
+        
+        .monitor-button:disabled {
+            background: linear-gradient(45deg, #666, #888);
+            border-color: #666;
+            color: #999;
+        }
+        
+        .monitor-status {
+            color: var(--neon-yellow);
+            font-size: 12px;
+            font-weight: 500;
+        }
 
         .config-value {
             padding: 12px;
@@ -1191,7 +1236,16 @@
             <div class="interface-config">
                 <div class="config-group">
                     <label class="config-label">WiFi Interface:</label>
-                    <input type="text" class="config-input" id="wifiInterface" placeholder="e.g., wlan0mon">
+                    <div class="interface-selector">
+                        <select class="config-input" id="wifiInterface">
+                            <option value="">Select Interface...</option>
+                        </select>
+                        <button class="cyber-button small-button" onclick="loadInterfaces()" id="refreshInterfaces">Refresh</button>
+                    </div>
+                    <div class="monitor-controls">
+                        <button class="cyber-button monitor-button" onclick="toggleMonitorMode()" id="monitorToggle">Enable Monitor Mode</button>
+                        <span class="monitor-status" id="monitorStatus">Not in monitor mode</span>
+                    </div>
                 </div>
                 <div class="config-group">
                     <label class="config-label">Target BSSID:</label>
@@ -1438,6 +1492,95 @@
                 addLogEntry('success', 'System status updated');
             } catch (e) {
                 addLogEntry('error', `System status error: ${e.message}`);
+            }
+        }
+
+        /**
+         * Load available WiFi interfaces
+         */
+        async function loadInterfaces() {
+            try {
+                const response = await fetch('/api/interfaces');
+                const data = await response.json();
+                
+                const select = document.getElementById('wifiInterface');
+                select.innerHTML = '<option value="">Select Interface...</option>';
+                
+                if (data.status === 'success' && data.interfaces.length > 0) {
+                    data.interfaces.forEach(iface => {
+                        const option = document.createElement('option');
+                        option.value = iface.name;
+                        option.textContent = `${iface.name} (${iface.status})`;
+                        if (iface.is_monitor) {
+                            option.textContent += ' ✓';
+                            option.style.color = '#00ff9d';
+                        }
+                        select.appendChild(option);
+                    });
+                    addLogEntry('success', `Found ${data.interfaces.length} WiFi interfaces`);
+                } else {
+                    addLogEntry('warning', 'No WiFi interfaces found');
+                }
+            } catch (e) {
+                addLogEntry('error', `Failed to load interfaces: ${e.message}`);
+            }
+        }
+
+        /**
+         * Toggle monitor mode for selected interface
+         */
+        async function toggleMonitorMode() {
+            const select = document.getElementById('wifiInterface');
+            const interface = select.value;
+            
+            if (!interface) {
+                addLogEntry('error', 'Please select an interface first');
+                return;
+            }
+            
+            const button = document.getElementById('monitorToggle');
+            const status = document.getElementById('monitorStatus');
+            
+            // Check current mode
+            const response = await fetch('/api/interfaces');
+            const data = await response.json();
+            const iface = data.interfaces.find(i => i.name === interface);
+            
+            if (!iface) {
+                addLogEntry('error', 'Interface not found');
+                return;
+            }
+            
+            const enable = !iface.is_monitor;
+            button.disabled = true;
+            button.textContent = enable ? 'Enabling...' : 'Disabling...';
+            
+            try {
+                const monitorResponse = await fetch('/api/monitor-mode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        interface: interface,
+                        enable: enable
+                    })
+                });
+                
+                const monitorData = await monitorResponse.json();
+                
+                if (monitorData.status === 'success') {
+                    addLogEntry('success', monitorData.message);
+                    status.textContent = enable ? 'Monitor Mode Enabled ✓' : 'Managed Mode';
+                    status.style.color = enable ? '#00ff9d' : '#ffef00';
+                    button.textContent = enable ? 'Disable Monitor Mode' : 'Enable Monitor Mode';
+                } else {
+                    addLogEntry('error', monitorData.error);
+                }
+            } catch (e) {
+                addLogEntry('error', `Monitor mode toggle failed: ${e.message}`);
+            } finally {
+                button.disabled = false;
+                // Refresh interfaces to update status
+                loadInterfaces();
             }
         }
 
@@ -2014,6 +2157,7 @@
             initParticles();
             initHologram();
             getSystemStatus();
+            loadInterfaces(); // Load available WiFi interfaces
             addLogEntry('info', 'Dashboard initialized. Ready for operations.');
             
             // Initialize the network map

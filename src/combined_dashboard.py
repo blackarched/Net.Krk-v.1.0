@@ -581,14 +581,14 @@ def analytics_dashboard():
 
 @app.route('/attack')
 def attack_dashboard():
-    # Read the new dashboard HTML file and modify for attack mode
+    # Read the fixed attack dashboard HTML file
     try:
-        # Try multiple possible paths for new_dash2.html
+        # Try multiple possible paths for fixed_attack_dashboard.html
         possible_paths = [
-            'fixed_main_dashboard.html',  # Current directory
-            '../fixed_main_dashboard.html',  # Parent directory
-            os.path.join(os.path.dirname(__file__), '..', 'fixed_main_dashboard.html'),  # Relative to this file
-            os.path.join(os.path.dirname(__file__), 'fixed_main_dashboard.html')  # Same directory as this file
+            'fixed_attack_dashboard.html',  # Current directory
+            '../fixed_attack_dashboard.html',  # Parent directory
+            os.path.join(os.path.dirname(__file__), '..', 'fixed_attack_dashboard.html'),  # Relative to this file
+            os.path.join(os.path.dirname(__file__), 'fixed_attack_dashboard.html')  # Same directory as this file
         ]
         
         html_content = None
@@ -596,58 +596,15 @@ def attack_dashboard():
             try:
                 with open(path, 'r') as f:
                     html_content = f.read()
-                print(f"✅ Loaded fixed_main_dashboard.html from: {path}")
+                print(f"✅ Loaded fixed_attack_dashboard.html from: {path}")
                 break
             except FileNotFoundError:
                 continue
         
         if html_content is None:
-            raise FileNotFoundError("fixed_main_dashboard.html not found in any expected location")
+            raise FileNotFoundError("fixed_attack_dashboard.html not found in any expected location")
         
-        # Modify for attack dashboard
-        html_content = html_content.replace(
-            '<title>NET.KRAK // WiFi Penetration Suite v3.0</title>',
-            '<title>NET.KRAK // Attack Dashboard v3.0</title>'
-        )
-        
-        # Replace mock data with real API calls
-        html_content = html_content.replace(
-            '// Simulate API call with mock data\n                await new Promise(resolve => setTimeout(resolve, 3000));\n                \n                // Use mock networks for demonstration\n                const networks = mockNetworks;',
-            '''// Real API call
-                const response = await fetch('/api/scan');
-                const data = await response.json();
-                const networks = data.networks || [];'''
-        )
-        
-        # Replace attack mock data with real API calls
-        html_content = html_content.replace(
-            '// Simulate API call with mock response\n                    await new Promise(resolve => setTimeout(resolve, 3000));\n                    \n                    // Simulate success or failure\n                    const success = Math.random() > 0.3;',
-            '''// Real API call
-                    const attackResponse = await fetch('/api/execute-attack', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            attack_type: vector,
-                            target: selectedTarget
-                        })
-                    });
-                    const attackData = await attackResponse.json();
-                    const success = attackData.status === 'success';'''
-        )
-        
-        # Replace stop attack mock data
-        html_content = html_content.replace(
-            '// Simulate API call\n                await new Promise(resolve => setTimeout(resolve, 1000));',
-            '''// Real API call
-                await fetch('/api/attack/stop', { method: 'POST' });'''
-        )
-        
-        # Add attack-specific modifications
-        html_content = html_content.replace(
-            'NET.KRAK',
-            'NET.KRAK // ATTACK'
-        )
-        
+        # Return the attack dashboard as-is (no modifications needed)
         return html_content
     except FileNotFoundError:
         # Fallback to original attack dashboard if new_dash2.html not found

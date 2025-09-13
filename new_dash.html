@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>net.krak - WiFi Penetration Suite v2.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(ellipse at center, #0a0a0a 0%, #000000 70%);
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            color: #00ffff;
+            overflow: hidden;
+            position: relative;
+            font-weight: 300;
+        }
+
+        /* Quantum substrate grid */
+        .quantum-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0,255,255,0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255,0,255,0.03) 0%, transparent 50%),
+                linear-gradient(rgba(0,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,255,0.02) 1px, transparent 1px);
+            background-size: 800px 800px, 600px 600px, 40px 40px, 40px 40px;
+            animation: quantumShift 20s linear infinite;
+            z-index: -3;
+        }
+
+        @keyframes quantumShift {
+            0% { background-position: 0 0, 0 0, 0 0, 0 0; }
+            100% { background-position: 800px 800px, -600px -600px, 40px 40px, 40px 40px; }
+        }
+
+        /* Photonic cascade */
+        .photon-cascade {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .photon {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            background: #00ff88;
+            box-shadow: 0 0 4px #00ff88;
+            animation: photonFlow linear infinite;
+        }
+
+        @keyframes photonFlow {
+            0% { transform: translateY(-10px) translateX(0px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(100vh) translateX(20px); opacity: 0; }
+        }
+
+        /* Neural architecture grid */
+        .neural-architecture {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            grid-template-rows: auto 1fr 1fr;
+            height: 100vh;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        /* Command header */
+        .command-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 32px;
+            background: 
+                linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(10,10,15,0.9) 100%),
+                radial-gradient(circle at 30% 30%, rgba(255,0,255,0.1) 0%, transparent 50%);
+            border: 1px solid rgba(255,0,255,0.6);
+            border-radius: 12px;
+            backdrop-filter: blur(20px) saturate(1.8);
+            box-shadow: 
+                0 8px 32px rgba(255,0,255,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+
+        .exploit-logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ff0088;
+            text-shadow: 0 0 20px #ff0088, 0 0 40px #ff0088;
+            animation: exploitPulse 3s ease-in-out infinite alternate;
+            letter-spacing: 3px;
+        }
+
+        @keyframes exploitPulse {
+            0% { text-shadow: 0 0 20px #ff0088, 0 0 40px #ff0088; }
+            100% { text-shadow: 0 0 30px #ff0088, 0 0 60px #ff0088, 0 0 80px rgba(255,0,136,0.8); }
+        }
+
+        .interface-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .status-beacon {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00ff00;
+            box-shadow: 0 0 20px #00ff00;
+            animation: beaconPulse 2s ease-in-out infinite;
+        }
+
+        .status-beacon.scanning {
+            background: #00ffff;
+            box-shadow: 0 0 20px #00ffff, 0 0 40px rgba(0,255,255,0.5);
+            animation: scanBeacon 0.6s ease-in-out infinite;
+        }
+
+        .status-beacon.attacking {
+            background: #ff0000;
+            box-shadow: 0 0 20px #ff0000, 0 0 40px rgba(255,0,0,0.5);
+            animation: attackBeacon 0.3s ease-in-out infinite;
+        }
+
+        @keyframes beaconPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes scanBeacon {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        @keyframes attackBeacon {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.5); }
+        }
+
+        /* Holographic matrices */
+        .holo-matrix {
+            background: 
+                linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(5,5,10,0.9) 50%, rgba(0,0,0,0.85) 100%),
+                radial-gradient(circle at top left, rgba(0,255,255,0.05) 0%, transparent 50%),
+                radial-gradient(circle at bottom right, rgba(255,0,255,0.05) 0%, transparent 50%);
+            border: 1px solid;
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(25px) saturate(1.5);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 8px 32px rgba(0,0,0,0.6),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+
+        .holo-matrix::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                rgba(0,255,255,0.02) 0%,
+                rgba(255,0,255,0.02) 50%,
+                rgba(0,255,0,0.02) 100%);
+            animation: holographicShift 12s linear infinite;
+        }
+
+        @keyframes holographicShift {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Network scanning matrix */
+        .matrix-scanner {
+            border-color: rgba(0,255,255,0.6);
+            box-shadow: 0 0 30px rgba(0,255,255,0.2);
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        /* Router targeting matrix */
+        .matrix-targeting {
+            border-color: rgba(255,102,0,0.6);
+            box-shadow: 0 0 30px rgba(255,102,0,0.2);
+            grid-column: 1;
+            grid-row: 3;
+        }
+
+        /* Attack vector matrix */
+        .matrix-vectors {
+            border-color: rgba(255,0,0,0.6);
+            box-shadow: 0 0 30px rgba(255,0,0,0.2);
+        }
+
+        /* Activity log matrix */
+        .matrix-activity {
+            border-color: rgba(0,255,0,0.6);
+            box-shadow: 0 0 30px rgba(0,255,0,0.2);
+            grid-column: 2;
+            grid-row: 2 / 4;
+        }
+
+        /* Interface configuration */
+        .matrix-interface {
+            border-color: rgba(255,255,0,0.6);
+            box-shadow: 0 0 30px rgba(255,255,0,0.2);
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        /* Network Map matrix */
+        .matrix-network-map {
+            border-color: rgba(0,128,255,0.6);
+            box-shadow: 0 0 30px rgba(0,128,255,0.2);
+            grid-column: 3;
+            grid-row: 3;
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Matrix headers */
+        .matrix-header {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px currentColor;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .matrix-header::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 10px currentColor;
+            animation: headerPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes headerPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.8); }
+        }
+
+        /* WiFi interface input */
+        .interface-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,0,0.4);
+            border-radius: 6px;
+            color: #ffff00;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .interface-input:focus {
+            outline: none;
+            border-color: #ffff00;
+            box-shadow: 0 0 15px rgba(255,255,0,0.3);
+        }
+
+        /* Network discovery list */
+        .network-discovery {
+            height: calc(100% - 80px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0,255,255,0.6) rgba(0,0,0,0.3);
+        }
+
+        .wifi-network {
+            padding: 10px;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, rgba(0,255,255,0.06) 0%, rgba(0,200,200,0.08) 100%);
+            border: 1px solid rgba(0,255,255,0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            animation: networkMaterialize 0.6s ease-out;
+        }
+
+        .wifi-network:hover {
+            background: linear-gradient(135deg, rgba(0,255,255,0.12) 0%, rgba(0,200,200,0.15) 100%);
+            border-color: rgba(0,255,255,0.5);
+            box-shadow: 0 0 20px rgba(0,255,255,0.3);
+            transform: translateX(4px);
+        }
+
+        .wifi-network.selected {
+            background: linear-gradient(135deg, rgba(255,102,0,0.15) 0%, rgba(255,80,0,0.18) 100%);
+            border-color: rgba(255,102,0,0.6);
+            box-shadow: 0 0 25px rgba(255,102,0,0.4);
+        }
+
+        @keyframes networkMaterialize {
+            0% { opacity: 0; transform: translateX(-30px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .network-ssid {
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .network-meta {
+            font-size: 9px;
+            color: rgba(0,255,255,0.7);
+        }
+
+        .network-rssi {
+            font-size: 9px;
+            color: rgba(0,255,0,0.7);
+            margin-top: 2px;
+        }
+
+        /* Router identification display */
+        .router-identification {
+            background: rgba(255,102,0,0.1);
+            border: 1px solid rgba(255,102,0,0.3);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 11px;
+        }
+
+        .router-type {
+            font-weight: 500;
+            color: #ff6600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .router-details {
+            color: rgba(255,255,255,0.8);
+            line-height: 1.4;
+        }
+
+        /* Attack vector grid */
+        .attack-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .attack-vector {
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(255,0,0,0.06) 0%, rgba(200,0,0,0.08) 100%);
+            border: 1px solid rgba(255,0,0,0.25);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .attack-vector::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,0,0,0.1), transparent);
+            transition: left 0.4s ease;
+        }
+
+        .attack-vector:hover::before {
+            left: 100%;
+        }
+
+        .attack-vector:hover {
+            background: linear-gradient(135deg, rgba(255,0,0,0.12) 0%, rgba(200,0,0,0.15) 100%);
+            border-color: rgba(255,0,0,0.5);
+            box-shadow: 0 0 20px rgba(255,0,0,0.3);
+            transform: scale(1.02);
+        }
+
+        .attack-vector.active {
+            background: linear-gradient(135deg, rgba(0,255,0,0.15) 0%, rgba(0,200,0,0.18) 100%);
+            border-color: rgba(0,255,0,0.6);
+            box-shadow: 0 0 25px rgba(0,255,0,0.4);
+            color: #00ff00;
+        }
+
+        .vector-name {
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            font-size: 10px;
+        }
+
+        .vector-description {
+            font-size: 8px;
+            opacity: 0.8;
+        }
+
+        /* Command controls */
+        .command-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .ctrl-command {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(20,20,25,0.6) 100%);
+            border: 1px solid;
+            border-radius: 6px;
+            color: inherit;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ctrl-command::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, currentColor, transparent);
+            opacity: 0.1;
+            transition: left 0.4s ease;
+        }
+
+        .ctrl-command:hover::before {
+            left: 100%;
+        }
+
+        .ctrl-command:hover {
+            box-shadow: 0 0 20px currentColor;
+            transform: translateY(-1px) scale(1.02);
+            border-color: currentColor;
+        }
+
+        .ctrl-scan { 
+            border-color: rgba(0,255,255,0.6); 
+            color: #00ffff;
+        }
+
+        .ctrl-attack { 
+            border-color: rgba(255,0,0,0.6); 
+            color: #ff0000;
+        }
+
+        .ctrl-stop { 
+            border-color: rgba(255,255,0,0.6); 
+            color: #ffff00;
+        }
+
+        .ctrl-status {
+            border-color: rgba(0,255,0,0.6);
+            color: #00ff00;
+        }
+
+        /* Activity log stream */
+        .activity-stream {
+            height: 100%;
+            overflow-y: auto;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+            padding: 6px 8px;
+            border-left: 2px solid;
+            padding-left: 12px;
+            animation: logMaterialize 0.5s ease-out;
+            background: linear-gradient(90deg, currentColor 0%, transparent 100%);
+            background-size: 0% 100%;
+            background-repeat: no-repeat;
+            transition: background-size 0.3s ease;
+        }
+
+        .log-entry:hover {
+            background-size: 10% 100%;
+        }
+
+        .log-entry.info { border-color: #00ffff; color: #00ffff; }
+        .log-entry.success { border-color: #00ff00; color: #00ff00; }
+        .log-entry.warning { border-color: #ffff00; color: #ffff00; }
+        .log-entry.error { border-color: #ff0000; color: #ff0000; }
+        .log-entry.attack { border-color: #ff0080; color: #ff0080; }
+
+        @keyframes logMaterialize {
+            0% { opacity: 0; transform: translateX(-20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Interface configuration panel */
+        .interface-config {
+            font-size: 11px;
+        }
+
+        .config-field {
+            margin-bottom: 12px;
+        }
+
+        .config-label {
+            display: block;
+            margin-bottom: 4px;
+            color: rgba(255,255,255,0.8);
+            text-transform: uppercase;
+            font-size: 9px;
+            letter-spacing: 1px;
+        }
+
+        .config-value {
+            color: #ffff00;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 4px 0;
+        }
+
+        /* Status indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-online { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .status-offline { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .status-warning { background: #ffff00; box-shadow: 0 0 10px #ffff00; }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+        }
+
+        /* Confirmation Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(10, 0, 0, 0.9) 0%, rgba(30, 0, 0, 0.95) 100%);
+            border: 1px solid rgba(255, 0, 0, 0.6);
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.4);
+            animation: modalFadeIn 0.5s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            font-size: 18px;
+            color: #ff0000;
+            text-shadow: 0 0 15px #ff0000;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-header::before {
+            content: '⚠️';
+        }
+
+        .modal-body p {
+            margin-bottom: 15px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .modal-body code {
+            color: #ffff00;
+            background: rgba(255, 255, 0, 0.1);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .modal-footer {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #00ffff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Network Map UI Overlay */
+        #network-map-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #network-map-ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .network-map-control {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 10, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            padding: 10px;
+            pointer-events: all;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            width: 160px;
+        }
+        
+        .network-map-control h4 {
+            color: #00ffff;
+            margin-bottom: 8px;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            font-size: 11px;
+        }
+        
+        .network-map-control-group {
+            margin-bottom: 8px;
+        }
+        
+        .network-map-control-group label {
+            display: block;
+            color: #ffffff;
+            margin-bottom: 3px;
+            font-size: 9px;
+        }
+        
+        .network-map-control-group input, .network-map-control-group select, .network-map-control-group button {
+            width: 100%;
+            padding: 5px;
+            background: rgba(0, 20, 40, 0.8);
+            border: 1px solid #00ffff;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 9px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .network-map-control-group button {
+            background: linear-gradient(45deg, #ff006e, #8338ec);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 9px;
+            padding: 6px;
+        }
+        
+        .network-map-control-group button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(255, 0, 110, 0.4);
+        }
+        
+        .network-map-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 10, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid #ff006e;
+            border-radius: 10px;
+            padding: 10px;
+            pointer-events: all;
+            box-shadow: 0 0 10px rgba(255, 0, 110, 0.3);
+            width: 180px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .network-map-info h4 {
+            color: #ff006e;
+            margin-bottom: 8px;
+            text-shadow: 0 0 5px rgba(255, 0, 110, 0.5);
+            font-size: 11px;
+        }
+        
+        .network-map-device-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .network-map-device-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 5px;
+            padding: 6px;
+            margin-bottom: 6px;
+            transition: all 0.3s ease;
+            font-size: 9px;
+        }
+        
+        .network-map-device-item:hover {
+            background: rgba(0, 255, 255, 0.2);
+            transform: translateX(3px);
+        }
+        
+        .network-map-device-name {
+            color: #00ffff;
+            font-weight: bold;
+            margin-bottom: 3px;
+            font-size: 9px;
+        }
+        
+        .network-map-device-details {
+            font-size: 8px;
+            color: #cccccc;
+        }
+        
+        .network-map-legend {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 10, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid #8338ec;
+            border-radius: 10px;
+            padding: 10px;
+            pointer-events: all;
+            box-shadow: 0 0 10px rgba(131, 56, 236, 0.3);
+            width: 160px;
+        }
+        
+        .network-map-legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            color: #fff;
+            font-size: 9px;
+        }
+        
+        .network-map-legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+        
+        .network-map-stats {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 10, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            padding: 10px;
+            pointer-events: all;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+            width: 140px;
+        }
+        
+        .network-map-stat-item {
+            margin-bottom: 5px;
+            font-size: 9px;
+        }
+        
+        .network-map-stat-value {
+            font-weight: bold;
+            color: #ffffff;
+            font-size: 9px;
+        }
+        
+        .network-map-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ffff;
+            font-size: 14px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+            animation: pulse 2s infinite;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .neural-architecture {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto auto;
+            }
+            
+            .matrix-scanner,
+            .matrix-targeting,
+            .matrix-activity,
+            .matrix-interface,
+            .matrix-network-map {
+                grid-column: 1;
+            }
+            
+            .matrix-scanner { grid-row: 2; }
+            .matrix-targeting { grid-row: 3; }
+            .matrix-activity { grid-row: 4; }
+            .matrix-interface { grid-row: 5; }
+            .matrix-network-map { grid-row: 6; height: 400px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="quantum-grid"></div>
+    <div class="photon-cascade" id="photonCascade"></div>
+
+    <div class="neural-architecture">
+        <div class="command-header">
+            <div class="exploit-logo">net.krak v2.0</div>
+            <div class="interface-status">
+                <div class="status-beacon" id="statusBeacon"></div>
+                <span id="statusText">AWAITING_INTERFACE</span>
+            </div>
+        </div>
+
+        <div class="holo-matrix matrix-scanner">
+            <div class="matrix-header" style="color: #00ffff;">Network Discovery</div>
+            <div class="network-discovery" id="networkDiscovery">
+                <div class="log-entry info">System Initialized. Enter WiFi interface and begin scan.</div>
+            </div>
+            <div class="command-controls">
+                <button class="ctrl-command ctrl-scan" onclick="scanNetworks()" id="scanBtn">
+                    <span id="scanText">SCAN NETWORKS</span>
+                </button>
+                <button class="ctrl-command ctrl-status" onclick="getSystemStatus()">STATUS</button>
+            </div>
+        </div>
+
+        <div class="holo-matrix matrix-targeting">
+            <div class="matrix-header" style="color: #ff6600;">Target Analysis</div>
+            <div class="router-identification" id="routerId">
+                <div class="router-type">No Target Selected</div>
+                <div class="router-details">Select a WiFi network to analyze.</div>
+            </div>
+            <div class="attack-grid" id="attackGrid">
+                <div class="attack-vector" onclick="toggleAttackVector(this)" data-vector="deauth">
+                    <div class="vector-name">Deauthentication Attack</div>
+                    <div class="vector-description">Forcefully disconnect all clients from the target AP.</div>
+                </div>
+                <div class="attack-vector" onclick="toggleAttackVector(this)" data-vector="handshake">
+                    <div class="vector-name">Handshake Capture</div>
+                    <div class="vector-description">Capture WPA/WPA2 handshake for offline password cracking.</div>
+                </div>
+                <div class="attack-vector" onclick="toggleAttackVector(this)" data-vector="evil_twin">
+                    <div class="vector-name">Evil Twin AP</div>
+                    <div class="vector-description">Create a rogue AP with the same name to trick clients.</div>
+                </div>
+                <div class="attack-vector" onclick="toggleAttackVector(this)" data-vector="credential">
+                    <div class="vector-name">Credential Capture</div>
+                    <div class="vector-description">Monitor and capture login credentials from clients.</div>
+                </div>
+                <div class="attack-vector" onclick="toggleAttackVector(this)" data-vector="wps">
+                    <div class="vector-name">WPS PIN Attack</div>
+                    <div class="vector-description">Brute force WPS PIN to gain network access.</div>
+                </div>
+                <div class="attack-vector" onclick="toggleAttackVector(this)" data-vector="fragmentation">
+                    <div class="vector-name">Fragmentation Attack</div>
+                    <div class="vector-description">Exploit fragmentation vulnerabilities in WEP/WPA.</div>
+                </div>
+            </div>
+            <div class="command-controls">
+                <button class="ctrl-command ctrl-attack" onclick="executeAttack()" id="attackBtn">EXECUTE ATTACK</button>
+                <button class="ctrl-command ctrl-stop" onclick="stopAllAttacks()" id="stopBtn">STOP ALL</button>
+            </div>
+        </div>
+
+        <div class="holo-matrix matrix-activity">
+            <div class="matrix-header" style="color: #00ff00;">Activity Log</div>
+            <div class="activity-stream" id="activityStream">
+                <div class="log-entry info">System Initialized. Enter WiFi interface and begin scan.</div>
+            </div>
+        </div>
+
+        <div class="holo-matrix matrix-interface">
+            <div class="matrix-header" style="color: #ffff00;">Interface Config</div>
+            <div class="interface-config">
+                <div class="config-field">
+                    <label class="config-label">WiFi Interface:</label>
+                    <input type="text" class="interface-input" id="wifiInterface" placeholder="e.g., wlan0mon">
+                </div>
+                <div class="config-field">
+                    <label class="config-label">Target BSSID:</label>
+                    <div class="config-value" id="targetBSSID">None</div>
+                </div>
+                <div class="config-field">
+                    <label class="config-label">Target SSID:</label>
+                    <div class="config-value" id="targetSSID">None</div>
+                </div>
+                <div class="config-field">
+                    <label class="config-label">Attack Status:</label>
+                    <div class="config-value" id="attackStatus">Idle</div>
+                </div>
+                <div class="config-field">
+                    <label class="config-label">System Status:</label>
+                    <div class="config-value" id="systemStatus">
+                        <span class="status-indicator status-offline"></span>Offline
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="holo-matrix matrix-network-map">
+            <div id="network-map-container"></div>
+            <div id="network-map-ui">
+                <div class="network-map-control">
+                    <h4>Network Controls</h4>
+                    <div class="network-map-control-group">
+                        <label>View Mode:</label>
+                        <select id="networkViewMode">
+                            <option value="3d">3D Network</option>
+                            <option value="topology">Topology View</option>
+                            <option value="heatmap">Signal Heatmap</option>
+                        </select>
+                    </div>
+                    <div class="network-map-control-group">
+                        <label>Animation Speed:</label>
+                        <input type="range" id="networkAnimSpeed" min="0.1" max="3" step="0.1" value="1">
+                    </div>
+                    <div class="network-map-control-group">
+                        <label>Node Size:</label>
+                        <input type="range" id="networkNodeSize" min="0.5" max="3" step="0.1" value="1">
+                    </div>
+                    <div class="network-map-control-group">
+                        <button id="networkScan">Scan Network</button>
+                    </div>
+                    <div class="network-map-control-group">
+                        <button id="networkResetView">Reset View</button>
+                    </div>
+                </div>
+                
+                <div class="network-map-info">
+                    <h4>Network Devices</h4>
+                    <div class="network-map-device-list" id="networkDeviceList">
+                        <div class="network-map-device-item">
+                            <div class="network-map-device-name">Router (Gateway)</div>
+                            <div class="network-map-device-details">IP: 192.168.1.1 | Signal: 100%</div>
+                        </div>
+                        <div class="network-map-device-item">
+                            <div class="network-map-device-name">Laptop-John</div>
+                            <div class="network-map-device-details">IP: 192.168.1.105 | Signal: 87%</div>
+                        </div>
+                        <div class="network-map-device-item">
+                            <div class="network-map-device-name">iPhone-Sarah</div>
+                            <div class="network-map-device-details">IP: 192.168.1.142 | Signal: 73%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="network-map-legend">
+                    <div class="network-map-legend-item">
+                        <div class="network-map-legend-color" style="background: #00ffff; box-shadow: 0 0 5px #00ffff;"></div>
+                        Gateway/Router
+                    </div>
+                    <div class="network-map-legend-item">
+                        <div class="network-map-legend-color" style="background: #ff006e; box-shadow: 0 0 5px #ff006e;"></div>
+                        Computer/Laptop
+                    </div>
+                    <div class="network-map-legend-item">
+                        <div class="network-map-legend-color" style="background: #8338ec; box-shadow: 0 0 5px #8338ec;"></div>
+                        Mobile Device
+                    </div>
+                    <div class="network-map-legend-item">
+                        <div class="network-map-legend-color" style="background: #00ff88; box-shadow: 0 0 5px #00ff88;"></div>
+                        IoT/Smart Device
+                    </div>
+                </div>
+                
+                <div class="network-map-stats">
+                    <div class="network-map-stat-item">Network Status: <span class="network-map-stat-value" id="networkStatus">Active</span></div>
+                    <div class="network-map-stat-item">Connected Devices: <span class="network-map-stat-value" id="networkDeviceCount">5</span></div>
+                    <div class="network-map-stat-item">Total Bandwidth: <span class="network-map-stat-value" id="networkBandwidth">847 Mbps</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-backdrop" id="confirmationModal">
+        <div class="modal-content">
+            <div class="modal-header">Confirm Attack Execution</div>
+            <div class="modal-body">
+                <p>You are about to launch the selected attack(s) on the following target:</p>
+                <p><strong>SSID:</strong> <code id="modalSsid"></code><br>
+                   <strong>BSSID:</strong> <code id="modalBssid"></code></p>
+                <p><strong>Vectors:</strong> <code id="modalVectors"></code></p>
+                <p>By clicking confirm, you acknowledge that you have the legal authorization to perform this security test.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="ctrl-command ctrl-stop" onclick="cancelAttack()">CANCEL</button>
+                <button class="ctrl-command ctrl-attack" id="confirmAttackBtn">CONFIRM ATTACK</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // --- Global State ---
+        let isScanning = false;
+        let isAttacking = false;
+        let selectedTarget = null;
+        let activeVectors = [];
+        let systemStatus = {};
+        let attackInterval = null;
+
+        // Mock data for demonstration
+        const mockNetworks = [
+            { ssid: 'HomeNetwork', bssid: 'AA:BB:CC:DD:EE:FF', channel: 6, security: 'WPA2', rssi: -45 },
+            { ssid: 'OfficeSecure', bssid: '11:22:33:44:55:66', channel: 11, security: 'WPA2', rssi: -62 },
+            { ssid: 'PublicWiFi', bssid: 'FF:EE:DD:CC:BB:AA', channel: 1, security: 'Open', rssi: -78 },
+            { ssid: 'HiddenNetwork', bssid: 'AB:CD:EF:12:34:56', channel: 3, security: 'WPA', rssi: -55 },
+            { ssid: 'NeighborNet', bssid: '99:88:77:66:55:44', channel: 9, security: 'WPA2', rssi: -68 }
+        ];
+
+        // --- 3D Network Map Variables ---
+        let networkMapScene, networkMapCamera, networkMapRenderer;
+        let networkMapNodes = [];
+        let networkMapConnections = [];
+        let networkMapParticles = [];
+        let networkMapAnimationSpeed = 1;
+        let networkMapNodeScale = 1;
+        let networkMapIsScanning = false;
+
+        // Network data
+        const networkMapDevices = [
+            { id: 'router', name: 'Router (Gateway)', ip: '192.168.1.1', type: 'gateway', signal: 100, position: [0, 0, 0] },
+            { id: 'laptop', name: 'Laptop-John', ip: '192.168.1.105', type: 'computer', signal: 87, position: [3, 1, -2] },
+            { id: 'iphone', name: 'iPhone-Sarah', ip: '192.168.1.142', type: 'mobile', signal: 73, position: [-2, 0, 3] },
+            { id: 'smarttv', name: 'Smart-TV-Living', ip: '192.168.1.201', type: 'iot', signal: 92, position: [4, -1, 1] },
+            { id: 'printer', name: 'Printer-Office', ip: '192.168.1.150', type: 'equipment', signal: 65, position: [-3, 2, -1] },
+        ];
+
+        // Device type colors
+        const networkMapDeviceColors = {
+            gateway: 0x00ffff,
+            computer: 0xff006e,
+            mobile: 0x8338ec,
+            iot: 0x00ff88,
+            equipment: 0xffaa00
+        };
+
+        /**
+         * Adds a new entry to the on-screen activity log.
+         */
+        function addLogEntry(type, message) {
+            const stream = document.getElementById('activityStream');
+            const entry = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false });
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${timestamp}] ${message}`;
+            stream.appendChild(entry);
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        /**
+         * Updates the status beacon and text
+         */
+        function updateStatus(status, text) {
+            const beacon = document.getElementById('statusBeacon');
+            const statusText = document.getElementById('statusText');
+            
+            beacon.className = `status-beacon ${status}`;
+            statusText.textContent = text;
+        }
+
+        /**
+         * Gets system status from the API
+         */
+        async function getSystemStatus() {
+            try {
+                // Mock API call for demonstration
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                systemStatus = {
+                    interfaces: ['wlan0', 'wlan0mon', 'eth0'],
+                    version: '2.0.1',
+                    uptime: '12d 4h 32m',
+                    cpu: '24%',
+                    memory: '1.2GB/4GB'
+                };
+                
+                updateSystemStatusDisplay();
+                addLogEntry('success', 'System status updated');
+            } catch (e) {
+                addLogEntry('error', `System status error: ${e.message}`);
+            }
+        }
+
+        /**
+         * Updates the system status display
+         */
+        function updateSystemStatusDisplay() {
+            const systemStatusEl = document.getElementById('systemStatus');
+            if (systemStatus.interfaces && systemStatus.interfaces.length > 0) {
+                systemStatusEl.innerHTML = '<span class="status-indicator status-online"></span>Online';
+            } else {
+                systemStatusEl.innerHTML = '<span class="status-indicator status-warning"></span>No Interfaces';
+            }
+        }
+
+        /**
+         * Enhanced network scanning with better error handling
+         */
+        async function scanNetworks() {
+            const iface = document.getElementById('wifiInterface').value;
+            if (!iface) {
+                addLogEntry('error', 'WiFi Interface cannot be empty.');
+                return;
+            }
+            if (isScanning) return;
+            
+            isScanning = true;
+            updateStatus('scanning', 'SCANNING...');
+            
+            const scanBtn = document.getElementById('scanBtn');
+            const scanText = document.getElementById('scanText');
+            scanBtn.disabled = true;
+            scanText.innerHTML = '<div class="loading"></div> SCANNING...';
+            
+            const discoveryContainer = document.getElementById('networkDiscovery');
+            addLogEntry('info', `Initializing network scan on interface ${iface}...`);
+            discoveryContainer.innerHTML = '<div class="log-entry info">Scanning... Please wait.</div>';
+
+            try {
+                // Simulate API call with mock data
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // Use mock networks for demonstration
+                const networks = mockNetworks;
+                
+                discoveryContainer.innerHTML = '';
+
+                if (Array.isArray(networks) && networks.length > 0) {
+                    networks.forEach(net => {
+                        const networkElement = document.createElement('div');
+                        networkElement.className = 'wifi-network';
+                        networkElement.dataset.ssid = net.ssid;
+                        networkElement.dataset.bssid = net.bssid;
+                        networkElement.dataset.channel = net.channel || '';
+                        networkElement.dataset.security = net.security || '';
+                        networkElement.dataset.rssi = net.rssi || '';
+                        
+                        let rssiDisplay = '';
+                        if (net.rssi) {
+                            rssiDisplay = `<div class="network-rssi">RSSI: ${net.rssi} dBm</div>`;
+                        }
+                        
+                        networkElement.innerHTML = `
+                            <div class="network-ssid">${net.ssid || '<em>&lt;hidden&gt;</em>'}</div>
+                            <div class="network-meta">BSSID: ${net.bssid} | Chan: ${net.channel || '?'} | Sec: ${net.security || '?'}</div>
+                            ${rssiDisplay}
+                        `;
+                        networkElement.addEventListener('click', () => selectNetwork(networkElement));
+                        discoveryContainer.appendChild(networkElement);
+                    });
+                    addLogEntry('success', `Scan complete. Discovered ${networks.length} networks.`);
+                } else {
+                    discoveryContainer.innerHTML = '<div class="log-entry warning">No networks found. Check interface name and ensure it is in monitor mode.</div>';
+                    addLogEntry('warning', 'Scan finished but no networks were found.');
+                }
+            } catch (e) {
+                discoveryContainer.innerHTML = `<div class="log-entry error">Scan failed: ${e.message}</div>`;
+                addLogEntry('error', `Scan failed: ${e.message}`);
+            } finally {
+                isScanning = false;
+                updateStatus('', 'READY');
+                scanBtn.disabled = false;
+                scanText.textContent = 'SCAN NETWORKS';
+            }
+        }
+
+        /**
+         * Handles the selection of a network from the list.
+         */
+        function selectNetwork(networkElement) {
+            document.querySelectorAll('.wifi-network.selected').forEach(n => n.classList.remove('selected'));
+            networkElement.classList.add('selected');
+
+            selectedTarget = {
+                ssid: networkElement.dataset.ssid,
+                bssid: networkElement.dataset.bssid,
+                channel: networkElement.dataset.channel,
+                security: networkElement.dataset.security,
+                rssi: networkElement.dataset.rssi
+            };
+
+            document.getElementById('targetBSSID').textContent = selectedTarget.bssid;
+            document.getElementById('targetSSID').textContent = selectedTarget.ssid;
+            document.getElementById('routerId').innerHTML = `
+                <div class="router-type">${selectedTarget.security} PROTECTED NETWORK</div>
+                <div class="router-details">
+                    <strong>SSID:</strong> ${selectedTarget.ssid}<br>
+                    <strong>BSSID:</strong> ${selectedTarget.bssid}<br>
+                    <strong>Channel:</strong> ${selectedTarget.channel || 'N/A'}<br>
+                    <strong>RSSI:</strong> ${selectedTarget.rssi || 'N/A'} dBm
+                </div>
+            `;
+            addLogEntry('info', `Target acquired: ${selectedTarget.ssid} (${selectedTarget.bssid})`);
+        }
+        
+        /**
+         * Toggles the active state of an attack vector.
+         */
+        function toggleAttackVector(vectorElement) {
+            const vectorType = vectorElement.dataset.vector;
+            vectorElement.classList.toggle('active');
+            
+            if (vectorElement.classList.contains('active')) {
+                if (!activeVectors.includes(vectorType)) {
+                    activeVectors.push(vectorType);
+                }
+                addLogEntry('success', `Vector enabled: ${vectorType.toUpperCase()}`);
+            } else {
+                activeVectors = activeVectors.filter(v => v !== vectorType);
+                addLogEntry('warning', `Vector disabled: ${vectorType.toUpperCase()}`);
+            }
+        }
+
+        /**
+         * Triggers the confirmation modal before executing an attack.
+         */
+        function executeAttack() {
+            if (!selectedTarget) {
+                addLogEntry('error', 'Cannot execute: No target selected.');
+                return;
+            }
+            if (activeVectors.length === 0) {
+                addLogEntry('error', 'Cannot execute: No attack vectors selected.');
+                return;
+            }
+
+            // Populate and show the modal
+            document.getElementById('modalSsid').textContent = selectedTarget.ssid;
+            document.getElementById('modalBssid').textContent = selectedTarget.bssid;
+            document.getElementById('modalVectors').textContent = activeVectors.join(', ').toUpperCase();
+            document.getElementById('confirmationModal').style.display = 'flex';
+
+            // Set up the confirmation button's action
+            document.getElementById('confirmAttackBtn').onclick = () => {
+                proceedWithAttack();
+            };
+        }
+
+        /**
+         * Hides the modal.
+         */
+        function cancelAttack() {
+            document.getElementById('confirmationModal').style.display = 'none';
+            addLogEntry('warning', 'Attack cancelled by user.');
+        }
+
+        /**
+         * Enhanced attack execution with better error handling
+         */
+        async function proceedWithAttack() {
+            document.getElementById('confirmationModal').style.display = 'none';
+            
+            const iface = document.getElementById('wifiInterface').value;
+            if (!iface) {
+                addLogEntry('error', 'WiFi Interface cannot be empty.');
+                return;
+            }
+
+            isAttacking = true;
+            updateStatus('attacking', 'ATTACKING...');
+            document.getElementById('attackStatus').textContent = 'ACTIVE';
+            addLogEntry('attack', `Executing attack on ${selectedTarget.ssid} with vectors: [${activeVectors.join(', ').toUpperCase()}]`);
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            // Simulate attack progress for demonstration
+            attackInterval = setInterval(() => {
+                addLogEntry('attack', `Attack in progress... ${Math.floor(Math.random() * 100)}% complete`);
+            }, 1500);
+
+            for (const vector of activeVectors) {
+                try {
+                    // Simulate API call with mock response
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    
+                    // Simulate success or failure
+                    const success = Math.random() > 0.3;
+                    
+                    if (success) {
+                        addLogEntry('success', `[${vector.toUpperCase()}] Attack completed successfully`);
+                        successCount++;
+                    } else {
+                        throw new Error('Attack failed due to signal interference');
+                    }
+                } catch (e) {
+                    addLogEntry('error', `[${vector.toUpperCase()}] Failed: ${e.message}`);
+                    errorCount++;
+                }
+            }
+            
+            // Update status
+            clearInterval(attackInterval);
+            setTimeout(() => {
+                isAttacking = false;
+                updateStatus('', 'READY');
+                document.getElementById('attackStatus').textContent = 'IDLE';
+                addLogEntry('info', `Attack sequence completed. Success: ${successCount}, Errors: ${errorCount}`);
+            }, 2000);
+        }
+
+        /**
+         * Stop all active attacks
+         */
+        async function stopAllAttacks() {
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                clearInterval(attackInterval);
+                addLogEntry('warning', 'All attacks stopped by user');
+                isAttacking = false;
+                updateStatus('', 'READY');
+                document.getElementById('attackStatus').textContent = 'IDLE';
+            } catch (e) {
+                addLogEntry('error', `Stop attacks failed: ${e.message}`);
+            }
+        }
+
+        /**
+         * Creates the animated background effect.
+         */
+        function initPhotonCascade() {
+            const cascade = document.getElementById('photonCascade');
+            if (!cascade) return;
+            for (let i = 0; i < 25; i++) {
+                const photon = document.createElement('div');
+                photon.className = 'photon';
+                photon.style.left = Math.random() * 100 + '%';
+                photon.style.animationDuration = (Math.random() * 4 + 3) + 's';
+                photon.style.animationDelay = Math.random() * 3 + 's';
+                cascade.appendChild(photon);
+            }
+        }
+
+        // --- 3D Network Map Functions ---
+
+        /**
+         * Initialize the 3D network map
+         */
+        function initNetworkMap() {
+            const container = document.getElementById('network-map-container');
+            if (!container) return;
+
+            // Scene setup
+            networkMapScene = new THREE.Scene();
+            networkMapScene.fog = new THREE.Fog(0x0a0a0a, 10, 50);
+
+            // Camera setup
+            networkMapCamera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            networkMapCamera.position.set(8, 6, 8);
+
+            // Renderer setup
+            networkMapRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            networkMapRenderer.setSize(container.clientWidth, container.clientHeight);
+            networkMapRenderer.setClearColor(0x0a0a0a, 0.8);
+            networkMapRenderer.shadowMap.enabled = true;
+            networkMapRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(networkMapRenderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+            networkMapScene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0x00ffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            networkMapScene.add(directionalLight);
+
+            // Create network nodes
+            createNetworkMapNodes();
+            
+            // Create connections
+            createNetworkMapConnections();
+            
+            // Create particle system
+            createNetworkMapParticleSystem();
+
+            // Add grid
+            addNetworkMapGrid();
+
+            // Event listeners
+            setupNetworkMapEventListeners();
+
+            // Start animation
+            animateNetworkMap();
+
+            // Update stats periodically
+            setInterval(updateNetworkMapStats, 5000);
+        }
+
+        function createNetworkMapNodes() {
+            networkMapDevices.forEach(device => {
+                const geometry = new THREE.SphereGeometry(0.3 * networkMapNodeScale, 16, 16);
+                const material = new THREE.MeshPhongMaterial({
+                    color: networkMapDeviceColors[device.type],
+                    emissive: networkMapDeviceColors[device.type],
+                    emissiveIntensity: 0.3,
+                    transparent: true,
+                    opacity: 0.9
+                });
+
+                const node = new THREE.Mesh(geometry, material);
+                node.position.set(...device.position);
+                node.userData = device;
+                node.castShadow = true;
+                node.receiveShadow = true;
+
+                // Add glow effect
+                const glowGeometry = new THREE.SphereGeometry(0.5 * networkMapNodeScale, 16, 16);
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    color: networkMapDeviceColors[device.type],
+                    transparent: true,
+                    opacity: 0.2
+                });
+                const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                node.add(glow);
+
+                networkMapScene.add(node);
+                networkMapNodes.push(node);
+            });
+        }
+
+        function createNetworkMapConnections() {
+            const routerNode = networkMapNodes.find(node => node.userData.type === 'gateway');
+            
+            networkMapNodes.forEach(node => {
+                if (node.userData.type !== 'gateway') {
+                    const points = [
+                        routerNode.position,
+                        node.position
+                    ];
+                    
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const material = new THREE.LineBasicMaterial({
+                        color: 0x00ffff,
+                        transparent: true,
+                        opacity: 0.6,
+                        linewidth: 2
+                    });
+                    
+                    const line = new THREE.Line(geometry, material);
+                    networkMapScene.add(line);
+                    networkMapConnections.push(line);
+                }
+            });
+        }
+
+        function createNetworkMapParticleSystem() {
+            const particleCount = 100;
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const sizes = new Float32Array(particleCount);
+
+            for (let i = 0; i < particleCount; i++) {
+                positions[i * 3] = (Math.random() - 0.5) * 20;
+                positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+
+                const color = new THREE.Color();
+                color.setHSL(Math.random() * 0.3 + 0.5, 0.8, 0.7);
+                colors[i * 3] = color.r;
+                colors[i * 3 + 1] = color.g;
+                colors[i * 3 + 2] = color.b;
+
+                sizes[i] = Math.random() * 2 + 1;
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 }
+                },
+                vertexShader: `
+                    attribute float size;
+                    attribute vec3 color;
+                    varying vec3 vColor;
+                    uniform float time;
+                    
+                    void main() {
+                        vColor = color;
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        gl_PointSize = size * (300.0 / -mvPosition.z) * (1.0 + sin(time + position.x) * 0.3);
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vColor;
+                    
+                    void main() {
+                        float distance = length(gl_PointCoord - vec2(0.5));
+                        if (distance > 0.5) discard;
+                        gl_FragColor = vec4(vColor, 1.0 - distance * 2.0);
+                    }
+                `,
+                transparent: true,
+                vertexColors: true
+            });
+
+            const particleSystem = new THREE.Points(geometry, material);
+            networkMapScene.add(particleSystem);
+            networkMapParticles.push(particleSystem);
+        }
+
+        function addNetworkMapGrid() {
+            const gridHelper = new THREE.GridHelper(20, 20, 0x00ffff, 0x333333);
+            gridHelper.material.transparent = true;
+            gridHelper.material.opacity = 0.3;
+            networkMapScene.add(gridHelper);
+        }
+
+        function setupNetworkMapEventListeners() {
+            // Window resize
+            window.addEventListener('resize', onNetworkMapWindowResize, false);
+
+            // Mouse interaction
+            const mouse = new THREE.Vector2();
+            const raycaster = new THREE.Raycaster();
+
+            const rendererDom = networkMapRenderer.domElement;
+            rendererDom.addEventListener('click', (event) => {
+                const rect = rendererDom.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, networkMapCamera);
+                const intersects = raycaster.intersectObjects(networkMapNodes);
+
+                if (intersects.length > 0) {
+                    const selectedNode = intersects[0].object;
+                    highlightNetworkMapNode(selectedNode);
+                    showNetworkMapDeviceInfo(selectedNode.userData);
+                }
+            });
+
+            // UI Controls
+            document.getElementById('networkAnimSpeed').addEventListener('input', (e) => {
+                networkMapAnimationSpeed = parseFloat(e.target.value);
+            });
+
+            document.getElementById('networkNodeSize').addEventListener('input', (e) => {
+                networkMapNodeScale = parseFloat(e.target.value);
+                updateNetworkMapNodeSizes();
+            });
+
+            document.getElementById('networkScan').addEventListener('click', scanNetworkMap);
+            document.getElementById('networkResetView').addEventListener('click', resetNetworkMapView);
+        }
+
+        function highlightNetworkMapNode(node) {
+            // Reset all nodes
+            networkMapNodes.forEach(n => {
+                n.material.emissiveIntensity = 0.3;
+                n.scale.set(1, 1, 1);
+            });
+
+            // Highlight selected node
+            node.material.emissiveIntensity = 0.8;
+            node.scale.set(1.5, 1.5, 1.5);
+        }
+
+        function showNetworkMapDeviceInfo(device) {
+            // Update device info in UI
+            const deviceList = document.getElementById('networkDeviceList');
+            deviceList.innerHTML = `
+                <div class="network-map-device-item">
+                    <div class="network-map-device-name">${device.name}</div>
+                    <div class="network-map-device-details">IP: ${device.ip} | Signal: ${device.signal}% | Type: ${device.type}</div>
+                </div>
+            `;
+        }
+
+        function updateNetworkMapNodeSizes() {
+            networkMapNodes.forEach(node => {
+                node.geometry.dispose();
+                node.geometry = new THREE.SphereGeometry(0.3 * networkMapNodeScale, 16, 16);
+                
+                // Update glow size
+                node.children[0].geometry.dispose();
+                node.children[0].geometry = new THREE.SphereGeometry(0.5 * networkMapNodeScale, 16, 16);
+            });
+        }
+
+        function scanNetworkMap() {
+            if (networkMapIsScanning) return;
+            
+            networkMapIsScanning = true;
+            const button = document.getElementById('networkScan');
+            button.textContent = 'Scanning...';
+            button.style.background = 'linear-gradient(45deg, #ffaa00, #ff6600)';
+
+            // Simulate network scan animation
+            networkMapNodes.forEach((node, index) => {
+                setTimeout(() => {
+                    const originalColor = node.material.color.clone();
+                    node.material.color.setHex(0xffaa00);
+                    
+                    setTimeout(() => {
+                        node.material.color.copy(originalColor);
+                    }, 500);
+                }, index * 200);
+            });
+
+            setTimeout(() => {
+                networkMapIsScanning = false;
+                button.textContent = 'Scan Network';
+                button.style.background = 'linear-gradient(45deg, #ff006e, #8338ec)';
+                updateNetworkMapStats();
+            }, 3000);
+        }
+
+        function resetNetworkMapView() {
+            networkMapCamera.position.set(8, 6, 8);
+            networkMapCamera.lookAt(0, 0, 0);
+            
+            networkMapNodes.forEach(node => {
+                node.material.emissiveIntensity = 0.3;
+                node.scale.set(1, 1, 1);
+            });
+        }
+
+        function updateNetworkMapStats() {
+            // Simulate real-time stats update
+            document.getElementById('networkBandwidth').textContent = (800 + Math.random() * 100).toFixed(0) + ' Mbps';
+            document.getElementById('networkDeviceCount').textContent = networkMapDevices.length;
+        }
+
+        function onNetworkMapWindowResize() {
+            const container = document.getElementById('network-map-container');
+            networkMapCamera.aspect = container.clientWidth / container.clientHeight;
+            networkMapCamera.updateProjectionMatrix();
+            networkMapRenderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function animateNetworkMap() {
+            requestAnimationFrame(animateNetworkMap);
+
+            const time = Date.now() * 0.001 * networkMapAnimationSpeed;
+
+            // Animate nodes
+            networkMapNodes.forEach((node, index) => {
+                node.rotation.y = time * 0.5;
+                node.position.y = node.userData.position[1] + Math.sin(time + index) * 0.1;
+                
+                // Pulse effect based on signal strength
+                const pulseScale = 1 + (node.userData.signal / 100) * 0.2 * Math.sin(time * 2 + index);
+                node.children[0].scale.set(pulseScale, pulseScale, pulseScale);
+            });
+
+            // Animate particles
+            networkMapParticles.forEach(particle => {
+                particle.material.uniforms.time.value = time;
+                particle.rotation.y = time * 0.1;
+            });
+
+            // Animate connections
+            networkMapConnections.forEach((connection, index) => {
+                const opacity = 0.3 + 0.3 * Math.sin(time * 2 + index);
+                connection.material.opacity = opacity;
+            });
+
+            // Camera orbit
+            networkMapCamera.position.x = Math.cos(time * 0.1) * 10;
+            networkMapCamera.position.z = Math.sin(time * 0.1) * 10;
+            networkMapCamera.lookAt(0, 0, 0);
+
+            networkMapRenderer.render(networkMapScene, networkMapCamera);
+        }
+
+        /**
+         * Initialize the dashboard
+         */
+        function initializeDashboard() {
+            initPhotonCascade();
+            getSystemStatus();
+            addLogEntry('info', 'Dashboard initialized. Ready for operations.');
+            
+            // Initialize the network map
+            setTimeout(initNetworkMap, 500);
+        }
+
+        // Initialize the dashboard when the DOM is loaded.
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>

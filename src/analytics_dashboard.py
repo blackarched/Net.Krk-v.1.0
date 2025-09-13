@@ -100,7 +100,7 @@ def get_system_stats():
 def home():
     # Read the new dashboard HTML file
     try:
-        with open('new_dash2.html', 'r') as f:
+        with open('../new_dash2.html', 'r') as f:
             html_content = f.read()
         
         # Modify for analytics dashboard

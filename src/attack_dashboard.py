@@ -57,7 +57,7 @@ def get_attack_stats():
 def home():
     # Read the new dashboard HTML file and modify for attack mode
     try:
-        with open('new_dash2.html', 'r') as f:
+        with open('../new_dash2.html', 'r') as f:
             html_content = f.read()
         
         # Modify for attack dashboard

@@ -103,7 +103,7 @@ def execute_attack(target, attack_type):
 def analytics_dashboard():
     # Read the new dashboard HTML file
     try:
-        with open('../new_dash2.html', 'r') as f:
+        with open('new_dash2.html', 'r') as f:
             html_content = f.read()
         
         # Replace mock data with real API calls
@@ -565,7 +565,7 @@ def analytics_dashboard():
 def attack_dashboard():
     # Read the new dashboard HTML file and modify for attack mode
     try:
-        with open('../new_dash2.html', 'r') as f:
+        with open('new_dash2.html', 'r') as f:
             html_content = f.read()
         
         # Modify for attack dashboard

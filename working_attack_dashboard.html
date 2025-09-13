@@ -425,10 +425,12 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.95);
-            display: flex;
+            display: flex !important;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 10000;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
 
         .password-form {
@@ -438,6 +440,8 @@
             padding: 40px;
             text-align: center;
             box-shadow: var(--glow-red);
+            position: relative;
+            z-index: 10001;
         }
 
         .password-title {
@@ -678,11 +682,15 @@
             const password = document.getElementById('passwordInput').value;
             const errorDiv = document.getElementById('passwordError');
             
+            console.log('Password check:', password, 'Expected:', ATTACK_PASSWORD);
+            
             if (password === ATTACK_PASSWORD) {
+                console.log('Password correct, hiding overlay');
                 document.getElementById('passwordOverlay').style.display = 'none';
                 document.getElementById('mainContainer').style.display = 'flex';
                 initializeAttackDashboard();
             } else {
+                console.log('Password incorrect');
                 errorDiv.textContent = 'Invalid access code. Try again.';
                 document.getElementById('passwordInput').value = '';
             }
@@ -1191,6 +1199,14 @@
 
         // Initialize on load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Attack Dashboard loaded');
+            console.log('Password overlay element:', document.getElementById('passwordOverlay'));
+            console.log('Password overlay display:', document.getElementById('passwordOverlay').style.display);
+            console.log('Password overlay computed style:', window.getComputedStyle(document.getElementById('passwordOverlay')).display);
+            
+            // Ensure password overlay is visible
+            document.getElementById('passwordOverlay').style.display = 'flex';
+            
             // Focus password input
             document.getElementById('passwordInput').focus();
         });

@@ -189,7 +189,27 @@ def run_external_tool(cmd_args, dry_run=False, logger=None, timeout=300, capture
         
         tool_name = cmd_args[0]
         if shutil.which(tool_name) is None:
-            raise FileNotFoundError(f"Required tool '{tool_name}' not found in PATH")
+            # Enhanced error message with diagnostics
+            error_msg = f"Required tool '{tool_name}' not found in PATH"
+            error_msg += f"\nRun diagnostics: python3 -m utils.runtime_diagnostics"
+            
+            # Provide specific installation instructions based on tool
+            tool_install_map = {
+                'airodump-ng': 'sudo apt-get install aircrack-ng',
+                'aireplay-ng': 'sudo apt-get install aircrack-ng',
+                'aircrack-ng': 'sudo apt-get install aircrack-ng',
+                'airmon-ng': 'sudo apt-get install aircrack-ng',
+                'reaver': 'sudo apt-get install reaver',
+                'bully': 'sudo apt-get install bully',
+                'iw': 'sudo apt-get install wireless-tools',
+                'iwconfig': 'sudo apt-get install wireless-tools',
+                'ifconfig': 'sudo apt-get install net-tools'
+            }
+            
+            if tool_name in tool_install_map:
+                error_msg += f"\nInstall with: {tool_install_map[tool_name]}"
+            
+            raise FileNotFoundError(error_msg)
         
         if dry_run:
             logger.info(f"[DRY RUN] Would run: {' '.join(cmd_args)}")

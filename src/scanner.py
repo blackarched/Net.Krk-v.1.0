@@ -69,12 +69,18 @@ class NetworkScanner:
         if logger is None:
             logger = self.logger
             
-        # Check if required tools are available
+        # Check if required tools are available with enhanced diagnostics
         required_tools = ["ifconfig", "iwconfig", "iw"]
+        missing_tools = []
         for tool in required_tools:
             if shutil.which(tool) is None:
-                logger.error(f"Required tool '{tool}' not found. Please install net-tools or equivalent.")
-                return False
+                missing_tools.append(tool)
+        
+        if missing_tools:
+            logger.error(f"Required tools not found: {', '.join(missing_tools)}")
+            logger.error("Run diagnostics: python3 -m utils.runtime_diagnostics")
+            logger.error("Install missing tools: sudo apt-get install net-tools wireless-tools")
+            return False
         
         try:
             # Validate interface exists

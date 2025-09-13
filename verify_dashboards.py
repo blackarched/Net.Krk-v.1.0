@@ -12,11 +12,11 @@ def verify_files():
     print("=" * 50)
     
     required_files = [
-        'combined_dashboard.py',
-        'analytics_dashboard.py', 
-        'attack_dashboard.py',
+        'src/combined_dashboard.py',
+        'src/analytics_dashboard.py', 
+        'src/attack_dashboard.py',
         'test_dashboards.py',
-        'PROJECT_ORGANIZATION_README.md'
+        'DASHBOARD_README.md'
     ]
     
     for file in required_files:
@@ -35,7 +35,7 @@ def verify_dashboard_structure():
     
     # Check combined dashboard
     try:
-        with open('combined_dashboard.py', 'r') as f:
+        with open('src/combined_dashboard.py', 'r') as f:
             content = f.read()
             
         checks = [
@@ -73,7 +73,7 @@ def verify_api_endpoints():
     print("=" * 50)
     
     try:
-        with open('combined_dashboard.py', 'r') as f:
+        with open('src/combined_dashboard.py', 'r') as f:
             content = f.read()
         
         endpoints = [
@@ -103,7 +103,7 @@ def verify_real_data_integration():
     print("=" * 50)
     
     try:
-        with open('combined_dashboard.py', 'r') as f:
+        with open('src/combined_dashboard.py', 'r') as f:
             content = f.read()
         
         real_data_features = [
@@ -136,7 +136,7 @@ def verify_visual_design():
     print("=" * 50)
     
     try:
-        with open('combined_dashboard.py', 'r') as f:
+        with open('src/combined_dashboard.py', 'r') as f:
             content = f.read()
         
         design_features = [
@@ -174,7 +174,7 @@ def verify_functionality():
     print("=" * 50)
     
     try:
-        with open('combined_dashboard.py', 'r') as f:
+        with open('src/combined_dashboard.py', 'r') as f:
             content = f.read()
         
         functionality = [

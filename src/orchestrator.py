@@ -11,15 +11,17 @@ import getpass
 import signal
 import time
 import threading
+import hashlib
+import hmac
 try:
     import psutil
 except ImportError:
     psutil = None
 from pathlib import Path
-from scanner import scan_networks, list_wifi_interfaces, get_network_info, get_scan_status
-from attacks import (deauth_attack, capture_handshake, perform_evil_twin, capture_credentials,
-                    perform_wps_attack, perform_fragmentation_attack, stop_attack, stop_all_attacks,
-                    get_attack_status)
+from .scanner import scan_networks, list_wifi_interfaces, get_network_info, get_scan_status
+from .attacks import (deauth_attack, capture_handshake, perform_evil_twin, capture_credentials,
+                     perform_wps_attack, perform_fragmentation_attack, stop_attack, stop_all_attacks,
+                     get_attack_status)
 
 # Configuration
 PID_FILE = ".netkrak.pid"
@@ -115,8 +117,11 @@ class NetKrakOrchestrator:
                 if field not in data:
                     raise ValueError(f"Missing required field: {field}")
             
-            # TODO: Implement robust signature verification
-            print("[INFO] Authorization file loaded. Signature verification is currently a placeholder.")
+            # Robust signature verification
+            if not self.verify_signature(data, auth_file):
+                raise ValueError("Invalid signature in authorization file")
+            
+            print("[INFO] Authorization file loaded and signature verified successfully.")
             self.log_event("auth_file_loaded", file=auth_file, data=data)
             return data
             
@@ -129,6 +134,65 @@ class NetKrakOrchestrator:
         except Exception as e:
             print(f"[FATAL] Failed to load authorization file: {e}", file=sys.stderr)
             sys.exit(1)
+    
+    def verify_signature(self, data, auth_file):
+        """Robust signature verification using HMAC-SHA256"""
+        try:
+            # Get the signature from the data
+            provided_signature = data.get("signature", "")
+            if not provided_signature:
+                print("[ERROR] No signature found in authorization file")
+                return False
+            
+            # Create a copy of data without signature for verification
+            data_copy = data.copy()
+            data_copy.pop("signature", None)
+            
+            # Create the message to sign (sorted JSON for consistency)
+            message = json.dumps(data_copy, sort_keys=True, separators=(',', ':'))
+            
+            # Get the secret key (in production, this should be from secure storage)
+            secret_key = self.get_auth_secret_key()
+            
+            # Generate expected signature
+            expected_signature = hmac.new(
+                secret_key.encode('utf-8'),
+                message.encode('utf-8'),
+                hashlib.sha256
+            ).hexdigest()
+            
+            # Compare signatures using constant-time comparison
+            if hmac.compare_digest(provided_signature, expected_signature):
+                print("[INFO] Authorization signature verified successfully")
+                return True
+            else:
+                print("[ERROR] Authorization signature verification failed")
+                return False
+                
+        except Exception as e:
+            print(f"[ERROR] Signature verification error: {e}")
+            return False
+    
+    def get_auth_secret_key(self):
+        """Get the secret key for signature verification"""
+        # In production, this should be loaded from a secure key store
+        # For now, we'll use a default key that should be changed
+        default_key = "netkrak_auth_secret_key_2024_change_me"
+        
+        # Try to load from environment variable first
+        env_key = os.getenv("NETKRAK_AUTH_SECRET_KEY")
+        if env_key:
+            return env_key
+        
+        # Try to load from a secure file
+        key_file = os.path.expanduser("~/.netkrak_auth_key")
+        try:
+            with open(key_file, "r") as f:
+                return f.read().strip()
+        except FileNotFoundError:
+            print(f"[WARNING] No auth secret key found. Using default key.")
+            print(f"[WARNING] For production use, set NETKRAK_AUTH_SECRET_KEY or create {key_file}")
+            return default_key
     
     def confirm_target(self, target_bssid, target_ssid, attack_type):
         """Enhanced target confirmation with safety checks"""
@@ -370,6 +434,37 @@ class NetKrakOrchestrator:
             self.log_event("cleanup_error", error=str(e))
             sys.exit(1)
     
+    def run_diagnostics(self, args):
+        """Run comprehensive system diagnostics"""
+        try:
+            # Import diagnostics module
+            from .utils.runtime_diagnostics import RuntimeDiagnostics
+            
+            diagnostics_engine = RuntimeDiagnostics()
+            diagnostics = diagnostics_engine.run_comprehensive_diagnostics()
+            
+            if args.json:
+                # Output in JSON format
+                print(json.dumps(diagnostics, indent=2))
+            elif args.docker_command:
+                # Generate Docker command
+                print("🐳 OPTIMAL DOCKER RUN COMMAND:")
+                print(diagnostics_engine.get_docker_run_command(diagnostics))
+            else:
+                # Print formatted diagnostics
+                diagnostics_engine.print_diagnostics(diagnostics)
+            
+            self.log_event("diagnostics_run", format=args.json and "json" or "formatted")
+            
+        except ImportError as e:
+            print(f"[ERROR] Could not import diagnostics module: {e}")
+            print("[INFO] Make sure utils/runtime_diagnostics.py exists")
+            sys.exit(1)
+        except Exception as e:
+            print(f"[ERROR] Diagnostics failed: {e}")
+            self.log_event("diagnostics_error", error=str(e))
+            sys.exit(1)
+    
     def main(self):
         """Main orchestrator function"""
         self.require_root()
@@ -434,6 +529,13 @@ class NetKrakOrchestrator:
         # Cleanup command
         cleanup_parser = subparsers.add_parser("cleanup", help="Clean up all processes and temporary files.")
         
+        # Diagnostics command
+        diag_parser = subparsers.add_parser("diagnostics", help="Run comprehensive system diagnostics.")
+        diag_parser.add_argument("--json", action="store_true", 
+                               help="Output diagnostics in JSON format.")
+        diag_parser.add_argument("--docker-command", action="store_true",
+                               help="Generate optimal Docker run command.")
+        
         args = parser.parse_args()
         
         # Load config if specified
@@ -461,6 +563,8 @@ class NetKrakOrchestrator:
                 self.run_status(args)
             elif args.command == "cleanup":
                 self.run_cleanup(args)
+            elif args.command == "diagnostics":
+                self.run_diagnostics(args)
             
         except KeyboardInterrupt:
             print("\n[!] Interrupted by user")

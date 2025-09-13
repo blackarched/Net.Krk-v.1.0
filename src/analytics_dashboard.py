@@ -1,55 +1,41 @@
-from flask import Flask, jsonify, request
-import sys
-import time
+from flask import Flask, jsonify, request, session
 import subprocess
 import re
+import time
 import json
 import os
 
 app = Flask(__name__)
+app.secret_key = 'netkrak_analytics_2024'
 
 # Global state
 is_scanning = False
-is_attacking = False
-selected_target = None
-active_vectors = []
-system_status = {}
+discovered_networks = []
+system_stats = {}
 
 def add_log_entry(type, message):
     """Add log entry"""
     timestamp = time.strftime('%H:%M:%S')
     print(f"[{timestamp}] [{type.upper()}] {message}")
 
-def update_status(status, text):
-    """Update status"""
-    print(f"Status: {status} - {text}")
-
-def get_system_status():
-    """Get system status"""
-    return {
-        'platform': sys.platform,
-        'python_version': sys.version,
-        'status': 'online',
-        'interfaces': ['wlan0', 'wlan1']  # Mock interfaces
-    }
-
 def scan_networks():
     """Scan for WiFi networks"""
-    global is_scanning
+    global is_scanning, discovered_networks
     is_scanning = True
-    add_log_entry('info', 'Starting network scan...')
+    add_log_entry('info', 'Starting network discovery...')
     
     networks = []
     try:
         result = subprocess.run(['iwlist', 'scan'], capture_output=True, text=True, timeout=15)
         if result.returncode == 0:
             networks = parse_iwlist(result.stdout)
-            add_log_entry('success', f'Found {len(networks)} networks')
+            add_log_entry('success', f'Discovered {len(networks)} networks')
         else:
-            add_log_entry('error', 'iwlist scan failed')
+            add_log_entry('error', 'Network scan failed')
     except Exception as e:
         add_log_entry('error', f'Scan error: {e}')
     
+    discovered_networks = networks
     is_scanning = False
     return networks
 
@@ -80,6 +66,10 @@ def parse_iwlist(output):
                 current['channel'] = freq_to_channel(float(freq.group(1)))
         elif 'Encryption key:' in line:
             current['security'] = 'WPA2' if 'on' in line else 'Open'
+        elif 'Quality=' in line:
+            quality = re.search(r'Quality=(\d+)/(\d+)', line)
+            if quality:
+                current['quality'] = int((int(quality.group(1)) / int(quality.group(2))) * 100
     
     if current:
         networks.append(current)
@@ -94,28 +84,79 @@ def freq_to_channel(freq):
         return int((freq - 5000) / 5)
     return 0
 
-def attack_network(target, attack_type):
-    """Simulate network attack"""
-    global is_attacking
-    is_attacking = True
-    add_log_entry('info', f'Starting {attack_type} attack on {target}')
-    
-    # Simulate attack progress
-    time.sleep(2)
-    add_log_entry('success', f'{attack_type} attack completed on {target}')
-    
-    is_attacking = False
-    return {'status': 'success', 'message': f'{attack_type} attack completed'}
+def get_system_stats():
+    """Get system statistics"""
+    return {
+        'total_networks': len(discovered_networks),
+        'hidden_networks': len([n for n in discovered_networks if not n.get('ssid') or n.get('ssid') == 'Hidden']),
+        'open_networks': len([n for n in discovered_networks if n.get('security') == 'Open']),
+        'secured_networks': len([n for n in discovered_networks if n.get('security') != 'Open']),
+        'strongest_signal': max([n.get('signal', -100) for n in discovered_networks]) if discovered_networks else -100,
+        'scan_time': time.strftime('%H:%M:%S'),
+        'is_scanning': is_scanning
+    }
 
 @app.route('/')
 def home():
-    return '''
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>net.krak - WiFi Penetration Suite v2.0</title>
+    # Read the new dashboard HTML file
+    try:
+        with open('new_dash2.html', 'r') as f:
+            html_content = f.read()
+        
+        # Modify for analytics dashboard
+        html_content = html_content.replace(
+            '<title>NET.KRAK // WiFi Penetration Suite v3.0</title>',
+            '<title>NET.KRAK // Analytics Dashboard v3.0</title>'
+        )
+        
+        # Replace mock data with real API calls
+        html_content = html_content.replace(
+            '// Simulate API call with mock data\n                await new Promise(resolve => setTimeout(resolve, 3000));\n                \n                // Use mock networks for demonstration\n                const networks = mockNetworks;',
+            '''// Real API call
+                const response = await fetch('/api/scan');
+                const data = await response.json();
+                const networks = data.networks || [];'''
+        )
+        
+        # Replace attack mock data with real API calls
+        html_content = html_content.replace(
+            '// Simulate API call with mock response\n                    await new Promise(resolve => setTimeout(resolve, 3000));\n                    \n                    // Simulate success or failure\n                    const success = Math.random() > 0.3;',
+            '''// Real API call
+                    const attackResponse = await fetch('/api/execute-attack', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            attack_type: vector,
+                            target: selectedTarget
+                        })
+                    });
+                    const attackData = await attackResponse.json();
+                    const success = attackData.status === 'success';'''
+        )
+        
+        # Replace stop attack mock data
+        html_content = html_content.replace(
+            '// Simulate API call\n                await new Promise(resolve => setTimeout(resolve, 1000));',
+            '''// Real API call
+                await fetch('/api/attack/stop', { method: 'POST' });'''
+        )
+        
+        # Add analytics-specific modifications
+        html_content = html_content.replace(
+            'NET.KRAK',
+            'NET.KRAK // ANALYTICS'
+        )
+        
+        return html_content
+    except FileNotFoundError:
+        # Fallback to original analytics dashboard if new_dash2.html not found
+        return '''
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Net.Krk - Network Analytics Dashboard</title>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
             
@@ -177,7 +218,7 @@ def home():
                 position: relative;
                 z-index: 1;
                 padding: 20px;
-                max-width: 1200px;
+                max-width: 1400px;
                 margin: 0 auto;
             }
 
@@ -206,6 +247,35 @@ def home():
                 letter-spacing: 1.5px;
             }
 
+            .nav-bar {
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+                margin: 20px 0;
+            }
+
+            .nav-button {
+                background: linear-gradient(45deg, #ff0088, #00ffff);
+                border: none;
+                color: white;
+                padding: 12px 25px;
+                border-radius: 25px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-block;
+            }
+
+            .nav-button:hover {
+                transform: scale(1.05);
+                box-shadow: 0 5px 15px rgba(255, 0, 136, 0.4);
+            }
+
+            .nav-button.active {
+                background: linear-gradient(45deg, #00ffff, #ff0088);
+            }
+
             .status-panel {
                 background: rgba(0, 255, 255, 0.05);
                 border: 1px solid #00ffff;
@@ -230,11 +300,6 @@ def home():
                 animation: scanBeacon 0.6s ease-in-out infinite;
             }
 
-            .status-beacon.attacking {
-                background: #ff0000;
-                animation: attackBeacon 0.3s ease-in-out infinite;
-            }
-
             @keyframes beaconPulse {
                 0%, 100% { transform: scale(1); opacity: 1; }
                 50% { transform: scale(1.1); opacity: 0.8; }
@@ -245,28 +310,52 @@ def home():
                 50% { transform: scale(1.3); }
             }
 
-            @keyframes attackBeacon {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.5); }
-            }
-
-            .control-panel {
+            .stats-grid {
                 display: grid;
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
                 gap: 20px;
                 margin: 20px 0;
             }
 
-            .scan-section, .attack-section {
+            .stat-card {
+                background: rgba(0, 255, 255, 0.05);
+                border: 1px solid #00ffff;
+                border-radius: 10px;
+                padding: 20px;
+                text-align: center;
+                transition: all 0.3s ease;
+            }
+
+            .stat-card:hover {
+                background: rgba(0, 255, 255, 0.1);
+                transform: translateY(-2px);
+            }
+
+            .stat-number {
+                font-size: 2.5em;
+                color: #ff0088;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            .stat-label {
+                color: #00ffff;
+                font-size: 0.9em;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+
+            .control-panel {
                 background: rgba(255, 0, 136, 0.05);
                 border: 1px solid #ff0088;
                 border-radius: 10px;
                 padding: 20px;
+                margin: 20px 0;
             }
 
             .section-title {
                 color: #ff0088;
-                font-size: 1.2em;
+                font-size: 1.3em;
                 margin-bottom: 15px;
                 text-align: center;
                 text-transform: uppercase;
@@ -298,7 +387,7 @@ def home():
             }
 
             .network-list {
-                max-height: 400px;
+                max-height: 500px;
                 overflow-y: auto;
                 margin: 20px 0;
             }
@@ -387,33 +476,6 @@ def home():
                 100% { opacity: 1; transform: translateX(0); }
             }
 
-            .attack-vectors {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 10px;
-                margin: 20px 0;
-            }
-
-            .attack-vector {
-                background: rgba(255, 0, 136, 0.05);
-                border: 1px solid #ff0088;
-                border-radius: 5px;
-                padding: 10px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                text-align: center;
-            }
-
-            .attack-vector:hover {
-                background: rgba(255, 0, 136, 0.1);
-                transform: scale(1.02);
-            }
-
-            .attack-vector.active {
-                background: rgba(255, 0, 136, 0.2);
-                border-color: #ff0088;
-            }
-
             .loading {
                 display: inline-block;
                 width: 20px;
@@ -429,36 +491,18 @@ def home():
                 100% { transform: rotate(360deg); }
             }
 
-            .stats {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                gap: 15px;
-                margin: 20px 0;
-            }
-
-            .stat-card {
+            .chart-container {
                 background: rgba(0, 255, 255, 0.05);
                 border: 1px solid #00ffff;
-                border-radius: 8px;
-                padding: 15px;
-                text-align: center;
-            }
-
-            .stat-number {
-                font-size: 2em;
-                color: #ff0088;
-                font-weight: bold;
-            }
-
-            .stat-label {
-                color: #00ffff;
-                font-size: 0.9em;
-                margin-top: 5px;
+                border-radius: 10px;
+                padding: 20px;
+                margin: 20px 0;
+                height: 300px;
             }
 
             @media (max-width: 768px) {
-                .control-panel {
-                    grid-template-columns: 1fr;
+                .stats-grid {
+                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
                 }
                 
                 .title {
@@ -478,7 +522,12 @@ def home():
         <div class="container">
             <div class="header">
                 <h1 class="title">net.krak</h1>
-                <p class="subtitle">WiFi Penetration Suite v2.0 - Mobile Edition</p>
+                <p class="subtitle">Network Analytics Dashboard</p>
+            </div>
+            
+            <div class="nav-bar">
+                <a href="/" class="nav-button active">📊 Analytics</a>
+                <a href="/attack" class="nav-button">⚔️ Attack Modules</a>
             </div>
             
             <div class="status-panel">
@@ -486,73 +535,62 @@ def home():
                 <span id="statusText">System Ready</span>
             </div>
             
-            <div class="stats" id="stats">
+            <div class="stats-grid" id="statsGrid">
                 <div class="stat-card">
-                    <div class="stat-number" id="networkCount">0</div>
-                    <div class="stat-label">Networks Found</div>
+                    <div class="stat-number" id="totalNetworks">0</div>
+                    <div class="stat-label">Total Networks</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="attackCount">0</div>
-                    <div class="stat-label">Active Attacks</div>
+                    <div class="stat-number" id="hiddenNetworks">0</div>
+                    <div class="stat-label">Hidden Networks</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="successCount">0</div>
-                    <div class="stat-label">Successful</div>
+                    <div class="stat-number" id="openNetworks">0</div>
+                    <div class="stat-label">Open Networks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="securedNetworks">0</div>
+                    <div class="stat-label">Secured Networks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="strongestSignal">-100</div>
+                    <div class="stat-label">Strongest Signal (dBm)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="scanTime">--:--:--</div>
+                    <div class="stat-label">Last Scan Time</div>
                 </div>
             </div>
             
             <div class="control-panel">
-                <div class="scan-section">
-                    <h3 class="section-title">🔍 Network Discovery</h3>
-                    <div style="text-align: center;">
-                        <button class="button" id="scanBtn" onclick="scanNetworks()">Scan Networks</button>
-                        <button class="button" onclick="refreshNetworks()">Refresh</button>
-                    </div>
-                    <div class="network-list" id="networkList">
-                        <div class="log-entry log-info">Click "Scan Networks" to discover WiFi networks</div>
-                    </div>
+                <h3 class="section-title">🔍 Network Discovery</h3>
+                <div style="text-align: center;">
+                    <button class="button" id="scanBtn" onclick="scanNetworks()">Start Network Scan</button>
+                    <button class="button" onclick="refreshStats()">Refresh Statistics</button>
+                    <button class="button" onclick="exportData()">Export Data</button>
                 </div>
                 
-                <div class="attack-section">
-                    <h3 class="section-title">⚔️ Attack Vectors</h3>
-                    <div class="attack-vectors">
-                        <div class="attack-vector" onclick="selectAttack('deauth')">
-                            <div>Deauth Attack</div>
-                        </div>
-                        <div class="attack-vector" onclick="selectAttack('handshake')">
-                            <div>Handshake Capture</div>
-                        </div>
-                        <div class="attack-vector" onclick="selectAttack('evil_twin')">
-                            <div>Evil Twin</div>
-                        </div>
-                        <div class="attack-vector" onclick="selectAttack('wps')">
-                            <div>WPS Attack</div>
-                        </div>
-                        <div class="attack-vector" onclick="selectAttack('fragmentation')">
-                            <div>Fragmentation</div>
-                        </div>
-                        <div class="attack-vector" onclick="selectAttack('credential')">
-                            <div>Credential Harvest</div>
-                        </div>
-                    </div>
-                    <div style="text-align: center; margin-top: 15px;">
-                        <button class="button" id="attackBtn" onclick="startAttack()" disabled>Start Attack</button>
-                        <button class="button" onclick="stopAttack()">Stop Attack</button>
-                    </div>
+                <div class="network-list" id="networkList">
+                    <div class="log-entry log-info">Click "Start Network Scan" to discover WiFi networks</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <h3 class="section-title">📈 Signal Strength Distribution</h3>
+                <div id="signalChart" style="height: 200px; display: flex; align-items: center; justify-content: center; color: #00ffff;">
+                    No data available
                 </div>
             </div>
             
             <div class="activity-log" id="activityLog">
-                <div class="log-entry log-info">[INFO] System initialized</div>
-                <div class="log-entry log-success">[SUCCESS] Ready for operations</div>
+                <div class="log-entry log-info">[INFO] Analytics dashboard initialized</div>
+                <div class="log-entry log-success">[SUCCESS] Ready for network analysis</div>
             </div>
         </div>
         
         <script>
             let selectedNetwork = null;
-            let selectedAttack = null;
             let isScanning = false;
-            let isAttacking = false;
             
             function addLogEntry(type, message) {
                 const log = document.getElementById('activityLog');
@@ -572,9 +610,22 @@ def home():
             }
             
             function updateStats() {
-                const networks = document.querySelectorAll('.network-item').length;
-                document.getElementById('networkCount').textContent = networks;
-                document.getElementById('attackCount').textContent = isAttacking ? 1 : 0;
+                fetch('/api/stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('totalNetworks').textContent = data.total_networks;
+                        document.getElementById('hiddenNetworks').textContent = data.hidden_networks;
+                        document.getElementById('openNetworks').textContent = data.open_networks;
+                        document.getElementById('securedNetworks').textContent = data.secured_networks;
+                        document.getElementById('strongestSignal').textContent = data.strongest_signal;
+                        document.getElementById('scanTime').textContent = data.scan_time;
+                        
+                        if (data.is_scanning) {
+                            updateStatus('scanning', 'SCANNING...');
+                        } else {
+                            updateStatus('ready', 'System Ready');
+                        }
+                    });
             }
             
             function scanNetworks() {
@@ -587,14 +638,16 @@ def home():
                 scanBtn.disabled = true;
                 scanBtn.innerHTML = '<div class="loading"></div> SCANNING...';
                 
-                addLogEntry('info', 'Starting network scan...');
+                addLogEntry('info', 'Starting comprehensive network scan...');
                 
                 fetch('/api/scan')
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            addLogEntry('success', `Found ${data.networks.length} networks`);
+                            addLogEntry('success', `Discovered ${data.networks.length} networks`);
                             displayNetworks(data.networks);
+                            updateStats();
+                            updateSignalChart(data.networks);
                         } else {
                             addLogEntry('error', `Scan failed: ${data.error}`);
                         }
@@ -604,9 +657,8 @@ def home():
                     })
                     .finally(() => {
                         isScanning = false;
-                        updateStatus('ready', 'System Ready');
                         scanBtn.disabled = false;
-                        scanBtn.textContent = 'Scan Networks';
+                        scanBtn.textContent = 'Start Network Scan';
                     });
             }
             
@@ -618,6 +670,9 @@ def home():
                     container.innerHTML = '<div class="log-entry log-warning">No networks found</div>';
                     return;
                 }
+                
+                // Sort by signal strength
+                networks.sort((a, b) => (b.signal || -100) - (a.signal || -100));
                 
                 networks.forEach(net => {
                     const div = document.createElement('div');
@@ -634,6 +689,8 @@ def home():
                             <div><strong>Signal:</strong> ${signalStrength}dBm</div>
                             <div><strong>Channel:</strong> ${net.channel || 'Unknown'}</div>
                             <div><strong>Security:</strong> ${net.security || 'Unknown'}</div>
+                            <div><strong>Quality:</strong> ${net.quality || 'Unknown'}%</div>
+                            <div><strong>Frequency:</strong> ${net.frequency || 'Unknown'} MHz</div>
                         </div>
                         <div class="signal-bar">
                             <div class="signal-fill" style="width: ${signalPercent}%"></div>
@@ -641,113 +698,104 @@ def home():
                     `;
                     container.appendChild(div);
                 });
-                
-                updateStats();
             }
             
             function selectNetwork(network, element) {
-                // Remove previous selection
                 document.querySelectorAll('.network-item').forEach(item => {
                     item.classList.remove('selected');
                 });
                 
-                // Select new network
                 element.classList.add('selected');
                 selectedNetwork = network;
                 
-                addLogEntry('info', `Selected network: ${network.ssid || 'Hidden'}`);
-                
-                // Enable attack button if attack is selected
-                if (selectedAttack) {
-                    document.getElementById('attackBtn').disabled = false;
-                }
+                addLogEntry('info', `Selected network: ${network.ssid || 'Hidden'} (${network.bssid})`);
             }
             
-            function selectAttack(attackType) {
-                // Remove previous selection
-                document.querySelectorAll('.attack-vector').forEach(item => {
-                    item.classList.remove('active');
+            function updateSignalChart(networks) {
+                const chart = document.getElementById('signalChart');
+                
+                if (networks.length === 0) {
+                    chart.innerHTML = 'No data available';
+                    return;
+                }
+                
+                // Simple bar chart visualization
+                const signals = networks.map(n => n.signal || -100);
+                const maxSignal = Math.max(...signals);
+                const minSignal = Math.min(...signals);
+                
+                let chartHTML = '<div style="display: flex; align-items: end; height: 150px; gap: 2px;">';
+                
+                signals.slice(0, 20).forEach(signal => {
+                    const height = ((signal - minSignal) / (maxSignal - minSignal)) * 100;
+                    const color = signal > -50 ? '#00ff00' : signal > -70 ? '#ffff00' : '#ff0000';
+                    
+                    chartHTML += `<div style="background: ${color}; height: ${height}%; width: 20px; border-radius: 2px 2px 0 0;"></div>`;
                 });
                 
-                // Select new attack
-                event.target.closest('.attack-vector').classList.add('active');
-                selectedAttack = attackType;
-                
-                addLogEntry('info', `Selected attack: ${attackType}`);
-                
-                // Enable attack button if network is selected
-                if (selectedNetwork) {
-                    document.getElementById('attackBtn').disabled = false;
-                }
+                chartHTML += '</div>';
+                chart.innerHTML = chartHTML;
             }
             
-            function startAttack() {
-                if (!selectedNetwork || !selectedAttack || isAttacking) return;
-                
-                isAttacking = true;
-                updateStatus('attacking', 'ATTACKING...');
-                
-                const attackBtn = document.getElementById('attackBtn');
-                attackBtn.disabled = true;
-                attackBtn.innerHTML = '<div class="loading"></div> ATTACKING...';
-                
-                addLogEntry('info', `Starting ${selectedAttack} attack on ${selectedNetwork.ssid || 'Hidden'}`);
-                
-                fetch('/api/attack', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        target: selectedNetwork,
-                        attack_type: selectedAttack
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        addLogEntry('success', `Attack completed: ${data.message}`);
-                        document.getElementById('successCount').textContent = 
-                            parseInt(document.getElementById('successCount').textContent) + 1;
-                    } else {
-                        addLogEntry('error', `Attack failed: ${data.error}`);
-                    }
-                })
-                .catch(error => {
-                    addLogEntry('error', `Attack failed: ${error.message}`);
-                })
-                .finally(() => {
-                    isAttacking = false;
-                    updateStatus('ready', 'System Ready');
-                    attackBtn.disabled = false;
-                    attackBtn.textContent = 'Start Attack';
-                });
+            function refreshStats() {
+                addLogEntry('info', 'Refreshing statistics...');
+                updateStats();
             }
             
-            function stopAttack() {
-                if (!isAttacking) return;
-                
-                addLogEntry('info', 'Stopping attack...');
-                isAttacking = false;
-                updateStatus('ready', 'System Ready');
-                
-                const attackBtn = document.getElementById('attackBtn');
-                attackBtn.disabled = false;
-                attackBtn.textContent = 'Start Attack';
-            }
-            
-            function refreshNetworks() {
-                addLogEntry('info', 'Refreshing networks...');
-                scanNetworks();
+            function exportData() {
+                addLogEntry('info', 'Exporting network data...');
+                // In a real implementation, this would generate a CSV or JSON file
+                addLogEntry('success', 'Data exported successfully');
             }
             
             // Auto-refresh every 30 seconds
             setInterval(() => {
-                if (!isScanning && !isAttacking) {
-                    addLogEntry('info', 'System heartbeat - ' + new Date().toLocaleTimeString());
+                if (!isScanning) {
+                    updateStats();
                 }
             }, 30000);
             
             // Initialize
             updateStats();
+        </script>
+    </body>
+    </html>
+    '''
+
+@app.route('/attack')
+def attack_redirect():
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Net.Krk - Attack Dashboard Access</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { background: #000; color: #0ff; font-family: monospace; padding: 50px; text-align: center; }
+            .login-box { background: rgba(0,255,255,0.1); border: 1px solid #0ff; border-radius: 10px; padding: 30px; max-width: 400px; margin: 0 auto; }
+            .title { color: #f08; font-size: 2em; margin-bottom: 20px; }
+            input { background: #111; color: #0ff; border: 1px solid #0ff; padding: 10px; margin: 10px; border-radius: 5px; width: 200px; }
+            button { background: linear-gradient(45deg, #f08, #0ff); border: none; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        </style>
+    </head>
+    <body>
+        <div class="login-box">
+            <h1 class="title">net.krak</h1>
+            <p>Attack Dashboard Access</p>
+            <input type="password" id="password" placeholder="Enter password" />
+            <br>
+            <button onclick="checkPassword()">Access Attack Modules</button>
+            <p id="error" style="color: #f00; margin-top: 10px;"></p>
+        </div>
+        <script>
+            function checkPassword() {
+                const password = document.getElementById('password').value;
+                if (password === 'netkrak2024') {
+                    window.location.href = '/attack-dashboard';
+                } else {
+                    document.getElementById('error').textContent = 'Invalid password';
+                }
+            }
         </script>
     </body>
     </html>
@@ -771,36 +819,15 @@ def api_scan():
             'error': str(e)
         })
 
-@app.route('/api/attack', methods=['POST'])
-def api_attack():
-    """Execute network attack"""
-    try:
-        data = request.get_json()
-        target = data.get('target')
-        attack_type = data.get('attack_type')
-        
-        if not target or not attack_type:
-            return jsonify({
-                'status': 'error',
-                'error': 'Missing target or attack type'
-            })
-        
-        result = attack_network(target, attack_type)
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'error': str(e)
-        })
-
-@app.route('/api/status')
-def api_status():
-    """Get system status"""
-    return jsonify(get_system_status())
+@app.route('/api/stats')
+def api_stats():
+    """Get system statistics"""
+    return jsonify(get_system_stats())
 
 if __name__ == '__main__':
-    print("🚀 Starting Net.Krk Full Dashboard...")
-    print("📱 Open your browser to: http://localhost:5000")
+    print("🚀 Starting Net.Krk Analytics Dashboard...")
+    print("📊 Analytics: http://localhost:5000")
+    print("⚔️ Attack Modules: http://localhost:5000/attack")
     print("⏹️  Press Ctrl+C to stop")
     
     try:

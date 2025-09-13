@@ -103,8 +103,26 @@ def execute_attack(target, attack_type):
 def analytics_dashboard():
     # Read the new dashboard HTML file
     try:
-        with open('new_dash2.html', 'r') as f:
-            html_content = f.read()
+        # Try multiple possible paths for new_dash2.html
+        possible_paths = [
+            'new_dash2.html',  # Current directory
+            '../new_dash2.html',  # Parent directory
+            os.path.join(os.path.dirname(__file__), '..', 'new_dash2.html'),  # Relative to this file
+            os.path.join(os.path.dirname(__file__), 'new_dash2.html')  # Same directory as this file
+        ]
+        
+        html_content = None
+        for path in possible_paths:
+            try:
+                with open(path, 'r') as f:
+                    html_content = f.read()
+                print(f"✅ Loaded new_dash2.html from: {path}")
+                break
+            except FileNotFoundError:
+                continue
+        
+        if html_content is None:
+            raise FileNotFoundError("new_dash2.html not found in any expected location")
         
         # Replace mock data with real API calls
         html_content = html_content.replace(
@@ -565,8 +583,26 @@ def analytics_dashboard():
 def attack_dashboard():
     # Read the new dashboard HTML file and modify for attack mode
     try:
-        with open('new_dash2.html', 'r') as f:
-            html_content = f.read()
+        # Try multiple possible paths for new_dash2.html
+        possible_paths = [
+            'new_dash2.html',  # Current directory
+            '../new_dash2.html',  # Parent directory
+            os.path.join(os.path.dirname(__file__), '..', 'new_dash2.html'),  # Relative to this file
+            os.path.join(os.path.dirname(__file__), 'new_dash2.html')  # Same directory as this file
+        ]
+        
+        html_content = None
+        for path in possible_paths:
+            try:
+                with open(path, 'r') as f:
+                    html_content = f.read()
+                print(f"✅ Loaded new_dash2.html from: {path}")
+                break
+            except FileNotFoundError:
+                continue
+        
+        if html_content is None:
+            raise FileNotFoundError("new_dash2.html not found in any expected location")
         
         # Modify for attack dashboard
         html_content = html_content.replace(

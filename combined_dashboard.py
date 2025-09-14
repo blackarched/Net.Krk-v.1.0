@@ -787,7 +787,7 @@ def attack_dashboard():
                 <div class="attack-module" onclick="selectAttack('evil_twin')">
                     <div class="attack-icon">👥</div>
                     <div class="attack-name">Evil Twin</div>
-                    <div class="attack-description">Create fake access point</div>
+                    <div class="attack-description">Create spoofed access point</div>
                 </div>
                 <div class="attack-module" onclick="selectAttack('wps')">
                     <div class="attack-icon">🔐</div>

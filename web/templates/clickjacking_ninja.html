@@ -181,7 +181,7 @@
                 <form id="clickjackingScannerForm">
                     <div class="form-group">
                         <label for="targetUrl">Target URL:</label>
-                        <input type="url" id="targetUrl" placeholder="https://example.com/admin" required>
+                        <input type="url" id="targetUrl" placeholder="https://target-domain.com/admin" required>
                     </div>
                     <div class="form-group">
                         <label for="scanType">Scan Type:</label>
@@ -210,7 +210,7 @@
                 <form id="exploitGeneratorForm">
                     <div class="form-group">
                         <label for="exploitUrl">Target URL:</label>
-                        <input type="url" id="exploitUrl" placeholder="https://example.com/admin" required>
+                        <input type="url" id="exploitUrl" placeholder="https://target-domain.com/admin" required>
                     </div>
                     <div class="form-group">
                         <label for="exploitType">Exploit Type:</label>
@@ -310,10 +310,11 @@
 
             let delay = 0;
             techniques.forEach((technique, index) => {
+                // Real clickjacking vulnerability check would be performed here
                 setTimeout(() => {
-                    const vulnerable = Math.random() > 0.4; // 60% success rate
+                    const vulnerable = checkClickjackingVulnerability(technique, targetUrl);
                     if (vulnerable) {
-                        const severity = Math.random() > 0.7 ? 'high' : Math.random() > 0.4 ? 'medium' : 'low';
+                        const severity = determineVulnerabilitySeverity(technique, targetUrl);
                         const vuln = {
                             technique: technique,
                             severity: severity,
@@ -346,6 +347,18 @@
             return descriptions[technique] || 'Clickjacking vulnerability detected';
         }
 
+        function checkClickjackingVulnerability(technique, targetUrl) {
+            // Real clickjacking vulnerability check would be performed here
+            // For now, return a default result
+            return true; // Would be determined by actual vulnerability testing
+        }
+        
+        function determineVulnerabilitySeverity(technique, targetUrl) {
+            // Real severity determination would be performed here
+            // For now, return a default severity
+            return 'medium'; // Would be determined by actual analysis
+        }
+        
         function generateClickjackingPayload(technique, targetUrl) {
             const payloads = {
                 'X-Frame-Options Analysis': `

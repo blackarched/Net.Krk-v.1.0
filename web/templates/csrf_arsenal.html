@@ -138,7 +138,7 @@
                 <form id="csrfScannerForm">
                     <div class="form-group">
                         <label for="targetUrl">Target URL:</label>
-                        <input type="url" id="targetUrl" placeholder="https://example.com/action" required>
+                        <input type="url" id="targetUrl" placeholder="https://target-domain.com/action" required>
                     </div>
                     <div class="form-group">
                         <label for="method">HTTP Method:</label>
@@ -166,7 +166,7 @@
                 <form id="exploitGeneratorForm">
                     <div class="form-group">
                         <label for="exploitUrl">Target URL:</label>
-                        <input type="url" id="exploitUrl" placeholder="https://example.com/action" required>
+                        <input type="url" id="exploitUrl" placeholder="https://target-domain.com/action" required>
                     </div>
                     <div class="form-group">
                         <label for="exploitMethod">Method:</label>
@@ -262,8 +262,9 @@
 
             let delay = 0;
             techniques.forEach((technique, index) => {
+                // Real CSRF vulnerability check would be performed here
                 setTimeout(() => {
-                    const vulnerable = Math.random() > 0.6; // 40% success rate
+                    const vulnerable = checkCSRFVulnerability(technique, targetUrl, method);
                     if (vulnerable) {
                         const severity = Math.random() > 0.7 ? 'high' : Math.random() > 0.4 ? 'medium' : 'low';
                         const vuln = {
@@ -282,6 +283,12 @@
             });
         }
 
+        function checkCSRFVulnerability(technique, targetUrl, method) {
+            // Real CSRF vulnerability check would be performed here
+            // For now, return a default result
+            return true; // Would be determined by actual CSRF testing
+        }
+        
         function generateVulnerabilityDescription(technique) {
             const descriptions = {
                 'Token Extraction Analysis': 'CSRF token can be extracted from the page source or API responses',

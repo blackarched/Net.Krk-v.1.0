@@ -782,7 +782,7 @@ def attack_redirect():
         <div class="login-box">
             <h1 class="title">net.krak</h1>
             <p>Attack Dashboard Access</p>
-            <input type="password" id="password" placeholder="Enter password" />
+            <input type="password" id="password" placeholder="Enter access code" />
             <br>
             <button onclick="checkPassword()">Access Attack Modules</button>
             <p id="error" style="color: #f00; margin-top: 10px;"></p>

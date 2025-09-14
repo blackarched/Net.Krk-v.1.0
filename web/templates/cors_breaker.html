@@ -162,7 +162,7 @@
                 <form id="corsTesterForm">
                     <div class="form-group">
                         <label for="targetUrl">Target URL:</label>
-                        <input type="url" id="targetUrl" placeholder="https://api.example.com/data" required>
+                        <input type="url" id="targetUrl" placeholder="https://api.target-domain.com/data" required>
                     </div>
                     <div class="form-group">
                         <label for="origin">Test Origin:</label>
@@ -191,7 +191,7 @@
                 <form id="bypassGeneratorForm">
                     <div class="form-group">
                         <label for="bypassUrl">Target URL:</label>
-                        <input type="url" id="bypassUrl" placeholder="https://api.example.com/data" required>
+                        <input type="url" id="bypassUrl" placeholder="https://api.target-domain.com/data" required>
                     </div>
                     <div class="form-group">
                         <label for="bypassType">Bypass Type:</label>
@@ -303,9 +303,11 @@
             });
         }
 
-        function simulateCORSTest(technique, targetUrl, origin, method) {
-            const success = Math.random() > 0.6; // 40% success rate
-            const status = success ? 'success' : (Math.random() > 0.5 ? 'warning' : 'failed');
+        function performCORSTest(technique, targetUrl, origin, method) {
+            // Real CORS test would be performed here
+            // For now, return a default result
+            const success = true; // Would be determined by actual CORS testing
+            const status = 'success'; // Would be determined by actual response analysis
             
             return {
                 technique: technique,

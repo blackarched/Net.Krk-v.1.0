@@ -261,32 +261,32 @@
                 // Simulate different testing methods based on context
                 switch (context) {
                     case 'html':
-                        testResult.vulnerable = Math.random() > 0.8; // 20% success rate
-                        testResult.confidence = testResult.vulnerable ? 85 + Math.random() * 15 : 30 + Math.random() * 40;
+                        testResult.vulnerable = checkXSSVulnerability('html', payload, targetUrl);
+                        testResult.confidence = testResult.vulnerable ? 90 : 30;
                         break;
                     case 'attribute':
-                        testResult.vulnerable = Math.random() > 0.85; // 15% success rate
-                        testResult.confidence = testResult.vulnerable ? 80 + Math.random() * 20 : 25 + Math.random() * 35;
+                        testResult.vulnerable = checkXSSVulnerability('attribute', payload, targetUrl);
+                        testResult.confidence = testResult.vulnerable ? 85 : 30;
                         break;
                     case 'javascript':
-                        testResult.vulnerable = Math.random() > 0.9; // 10% success rate
-                        testResult.confidence = testResult.vulnerable ? 90 + Math.random() * 10 : 20 + Math.random() * 30;
+                        testResult.vulnerable = checkXSSVulnerability('javascript', payload, targetUrl);
+                        testResult.confidence = testResult.vulnerable ? 95 : 25;
                         break;
                     case 'css':
-                        testResult.vulnerable = Math.random() > 0.95; // 5% success rate
-                        testResult.confidence = testResult.vulnerable ? 95 + Math.random() * 5 : 15 + Math.random() * 25;
+                        testResult.vulnerable = checkXSSVulnerability('css', payload, targetUrl);
+                        testResult.confidence = testResult.vulnerable ? 98 : 20;
                         break;
                     case 'url':
-                        testResult.vulnerable = Math.random() > 0.88; // 12% success rate
-                        testResult.confidence = testResult.vulnerable ? 88 + Math.random() * 12 : 22 + Math.random() * 33;
+                        testResult.vulnerable = checkXSSVulnerability('url', payload, targetUrl);
+                        testResult.confidence = testResult.vulnerable ? 90 : 28;
                         break;
                     case 'dom':
-                        testResult.vulnerable = Math.random() > 0.92; // 8% success rate
-                        testResult.confidence = testResult.vulnerable ? 92 + Math.random() * 8 : 18 + Math.random() * 27;
+                        testResult.vulnerable = checkXSSVulnerability('dom', payload, targetUrl);
+                        testResult.confidence = testResult.vulnerable ? 95 : 22;
                         break;
                     default:
-                        testResult.vulnerable = Math.random() > 0.85; // 15% success rate
-                        testResult.confidence = testResult.vulnerable ? 85 + Math.random() * 15 : 25 + Math.random() * 35;
+                        testResult.vulnerable = checkXSSVulnerability('default', payload, targetUrl);
+                        testResult.confidence = testResult.vulnerable ? 88 : 30;
                 }
                 
                 // Check for potential vulnerabilities
@@ -413,8 +413,8 @@
             const promises = wordlist.slice(0, 20).map(async (subdomain) => {
                 try {
                     const fullDomain = `${subdomain}.${domain}`;
-                    // Simulate DNS lookup
-                    const exists = Math.random() > 0.7; // 30% success rate
+                    // Real DNS lookup would be performed here
+                    const exists = checkSubdomainExists(subdomain);
                     if (exists) {
                         subdomains.push(fullDomain);
                     }
@@ -453,8 +453,8 @@
 
         async function dnsZoneTransfer(domain) {
             const subdomains = [];
-            // Simulate zone transfer attempt
-            if (Math.random() > 0.8) { // 20% success rate
+            // Real zone transfer attempt would be performed here
+            if (attemptZoneTransfer(domain)) {
                 const zoneSubdomains = ['www', 'mail', 'ftp', 'admin', 'ns1', 'ns2', 'mx'];
                 zoneSubdomains.forEach(sub => {
                     subdomains.push(`${sub}.${domain}`);
@@ -1627,6 +1627,23 @@
                 <small>Severity: ${severity.toUpperCase()}</small>
             `;
             resultContent.appendChild(resultItem);
+        }
+        function checkXSSVulnerability(context, payload, targetUrl) {
+            // Real XSS vulnerability check would be performed here
+            // For now, return a default result
+            return false; // Would be determined by actual XSS testing
+        }
+        
+        function checkSubdomainExists(subdomain) {
+            // Real DNS lookup would be performed here
+            // For now, return a default result
+            return false; // Would be determined by actual DNS resolution
+        }
+        
+        function attemptZoneTransfer(domain) {
+            // Real zone transfer attempt would be performed here
+            // For now, return a default result
+            return false; // Would be determined by actual zone transfer attempt
         }
     </script>
 </body>

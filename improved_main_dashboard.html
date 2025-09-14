@@ -1163,6 +1163,404 @@
             background-repeat: no-repeat;
         }
 
+        /* CYBR_WNDW Styles - Cyberpunk Context Window Design */
+        .cybr-window {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: 200ms;
+        }
+
+        .cybr-window:active {
+            transform: scale(0.98);
+        }
+
+        .cybr-card {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 20px;
+            transition: 700ms;
+            background: linear-gradient(45deg, #1a1a1a, #262626);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .cybr-card-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+        }
+
+        .cybr-prompt {
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            transition: 300ms ease-in-out;
+            position: absolute;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .cybr-title {
+            opacity: 0;
+            transition: 300ms ease-in-out;
+            position: absolute;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 4px;
+            text-align: center;
+            width: 100%;
+            padding-top: 20px;
+            background: linear-gradient(45deg, #00ffaa, #00a2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 170, 0.3));
+            text-shadow: 0 0 10px rgba(92, 103, 255, 0.5), 0 0 20px rgba(92, 103, 255, 0.3);
+        }
+
+        .cybr-subtitle {
+            position: absolute;
+            bottom: 40px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            letter-spacing: 2px;
+            transform: translateY(30px);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .cybr-highlight {
+            color: #00ffaa;
+            margin-left: 5px;
+            background: linear-gradient(90deg, #5c67ff, #ad51ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+
+        .cybr-glowing-elements {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .cybr-glow-1,
+        .cybr-glow-2,
+        .cybr-glow-3 {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, rgba(0, 255, 170, 0.3) 0%, rgba(0, 255, 170, 0) 70%);
+            filter: blur(15px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cybr-glow-1 {
+            top: -20px;
+            left: -20px;
+        }
+
+        .cybr-glow-2 {
+            top: 50%;
+            right: -30px;
+            transform: translateY(-50%);
+        }
+
+        .cybr-glow-3 {
+            bottom: -20px;
+            left: 30%;
+        }
+
+        .cybr-card-particles span {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #00ffaa;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cybr-card::before {
+            content: "";
+            background: radial-gradient(circle at center, rgba(0, 255, 170, 0.1) 0%, rgba(0, 162, 255, 0.05) 50%, transparent 100%);
+            filter: blur(20px);
+            opacity: 0;
+            width: 150%;
+            height: 150%;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease;
+        }
+
+        .cybr-tracker {
+            position: absolute;
+            z-index: 200;
+            width: 100%;
+            height: 100%;
+        }
+
+        .cybr-tracker:hover {
+            cursor: pointer;
+        }
+
+        .cybr-canvas {
+            perspective: 800px;
+            inset: 0;
+            z-index: 200;
+            position: absolute;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+            gap: 0px 0px;
+            grid-template-areas:
+                "tr-1 tr-2 tr-3 tr-4 tr-5"
+                "tr-6 tr-7 tr-8 tr-9 tr-10"
+                "tr-11 tr-12 tr-13 tr-14 tr-15"
+                "tr-16 tr-17 tr-18 tr-19 tr-20"
+                "tr-21 tr-22 tr-23 tr-24 tr-25";
+        }
+
+        .cybr-tr-1 { grid-area: tr-1; }
+        .cybr-tr-2 { grid-area: tr-2; }
+        .cybr-tr-3 { grid-area: tr-3; }
+        .cybr-tr-4 { grid-area: tr-4; }
+        .cybr-tr-5 { grid-area: tr-5; }
+        .cybr-tr-6 { grid-area: tr-6; }
+        .cybr-tr-7 { grid-area: tr-7; }
+        .cybr-tr-8 { grid-area: tr-8; }
+        .cybr-tr-9 { grid-area: tr-9; }
+        .cybr-tr-10 { grid-area: tr-10; }
+        .cybr-tr-11 { grid-area: tr-11; }
+        .cybr-tr-12 { grid-area: tr-12; }
+        .cybr-tr-13 { grid-area: tr-13; }
+        .cybr-tr-14 { grid-area: tr-14; }
+        .cybr-tr-15 { grid-area: tr-15; }
+        .cybr-tr-16 { grid-area: tr-16; }
+        .cybr-tr-17 { grid-area: tr-17; }
+        .cybr-tr-18 { grid-area: tr-18; }
+        .cybr-tr-19 { grid-area: tr-19; }
+        .cybr-tr-20 { grid-area: tr-20; }
+        .cybr-tr-21 { grid-area: tr-21; }
+        .cybr-tr-22 { grid-area: tr-22; }
+        .cybr-tr-23 { grid-area: tr-23; }
+        .cybr-tr-24 { grid-area: tr-24; }
+        .cybr-tr-25 { grid-area: tr-25; }
+
+        .cybr-tr-1:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(20deg) rotateY(-10deg) rotateZ(0deg); }
+        .cybr-tr-2:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(20deg) rotateY(-5deg) rotateZ(0deg); }
+        .cybr-tr-3:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(20deg) rotateY(0deg) rotateZ(0deg); }
+        .cybr-tr-4:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(20deg) rotateY(5deg) rotateZ(0deg); }
+        .cybr-tr-5:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(20deg) rotateY(10deg) rotateZ(0deg); }
+        .cybr-tr-6:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(10deg) rotateY(-10deg) rotateZ(0deg); }
+        .cybr-tr-7:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(10deg) rotateY(-5deg) rotateZ(0deg); }
+        .cybr-tr-8:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(10deg) rotateY(0deg) rotateZ(0deg); }
+        .cybr-tr-9:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(10deg) rotateY(5deg) rotateZ(0deg); }
+        .cybr-tr-10:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(10deg) rotateY(10deg) rotateZ(0deg); }
+        .cybr-tr-11:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(0deg) rotateY(-10deg) rotateZ(0deg); }
+        .cybr-tr-12:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(0deg) rotateY(-5deg) rotateZ(0deg); }
+        .cybr-tr-13:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+        .cybr-tr-14:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(0deg) rotateY(5deg) rotateZ(0deg); }
+        .cybr-tr-15:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(0deg) rotateY(10deg) rotateZ(0deg); }
+        .cybr-tr-16:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(-10deg) rotateY(-10deg) rotateZ(0deg); }
+        .cybr-tr-17:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(-10deg) rotateY(-5deg) rotateZ(0deg); }
+        .cybr-tr-18:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(-10deg) rotateY(0deg) rotateZ(0deg); }
+        .cybr-tr-19:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(-10deg) rotateY(5deg) rotateZ(0deg); }
+        .cybr-tr-20:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(-10deg) rotateY(10deg) rotateZ(0deg); }
+        .cybr-tr-21:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(-20deg) rotateY(-10deg) rotateZ(0deg); }
+        .cybr-tr-22:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(-20deg) rotateY(-5deg) rotateZ(0deg); }
+        .cybr-tr-23:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(-20deg) rotateY(0deg) rotateZ(0deg); }
+        .cybr-tr-24:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(-20deg) rotateY(5deg) rotateZ(0deg); }
+        .cybr-tr-25:hover ~ .cybr-card { transition: 125ms ease-in-out; transform: rotateX(-20deg) rotateY(10deg) rotateZ(0deg); }
+
+        .cybr-noselect {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .cybr-card-glare {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(125deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.05) 45%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 55%, rgba(255, 255, 255, 0) 100%);
+            opacity: 0;
+            transition: opacity 300ms;
+        }
+
+        .cybr-lines span {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, rgba(92, 103, 255, 0.2), transparent);
+        }
+
+        .cybr-lines span:nth-child(1) {
+            top: 20%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            transform: scaleX(0);
+            transform-origin: left;
+            animation: cybr-lineGrow 3s linear infinite;
+        }
+
+        .cybr-lines span:nth-child(2) {
+            top: 40%;
+            right: 0;
+            width: 100%;
+            height: 1px;
+            transform: scaleX(0);
+            transform-origin: right;
+            animation: cybr-lineGrow 3s linear infinite 1s;
+        }
+
+        .cybr-lines span:nth-child(3) {
+            top: 60%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            transform: scaleX(0);
+            transform-origin: left;
+            animation: cybr-lineGrow 3s linear infinite 2s;
+        }
+
+        .cybr-lines span:nth-child(4) {
+            top: 80%;
+            right: 0;
+            width: 100%;
+            height: 1px;
+            transform: scaleX(0);
+            transform-origin: right;
+            animation: cybr-lineGrow 3s linear infinite 1.5s;
+        }
+
+        .cybr-corner-elements span {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(92, 103, 255, 0.3);
+        }
+
+        .cybr-corner-elements span:nth-child(1) {
+            top: 10px;
+            left: 10px;
+            border-right: 0;
+            border-bottom: 0;
+        }
+
+        .cybr-corner-elements span:nth-child(2) {
+            top: 10px;
+            right: 10px;
+            border-left: 0;
+            border-bottom: 0;
+        }
+
+        .cybr-corner-elements span:nth-child(3) {
+            bottom: 10px;
+            left: 10px;
+            border-right: 0;
+            border-top: 0;
+        }
+
+        .cybr-corner-elements span:nth-child(4) {
+            bottom: 10px;
+            right: 10px;
+            border-left: 0;
+            border-top: 0;
+        }
+
+        .cybr-scan-line {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent, rgba(92, 103, 255, 0.1), transparent);
+            transform: translateY(-100%);
+            animation: cybr-scanMove 2s linear infinite;
+        }
+
+        @keyframes cybr-lineGrow {
+            0% { transform: scaleX(0); opacity: 0; }
+            50% { transform: scaleX(1); opacity: 1; }
+            100% { transform: scaleX(0); opacity: 0; }
+        }
+
+        @keyframes cybr-scanMove {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        @keyframes cybr-particleFloat {
+            0% { transform: translate(0, 0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translate(calc(var(--x, 0) * 30px), calc(var(--y, 0) * 30px)); opacity: 0; }
+        }
+
+        .cybr-card-particles span:nth-child(1) { --x: 1; --y: -1; top: 40%; left: 20%; }
+        .cybr-card-particles span:nth-child(2) { --x: -1; --y: -1; top: 60%; right: 20%; }
+        .cybr-card-particles span:nth-child(3) { --x: 0.5; --y: 1; top: 20%; left: 40%; }
+        .cybr-card-particles span:nth-child(4) { --x: -0.5; --y: 1; top: 80%; right: 40%; }
+        .cybr-card-particles span:nth-child(5) { --x: 1; --y: 0.5; top: 30%; left: 60%; }
+        .cybr-card-particles span:nth-child(6) { --x: -1; --y: 0.5; top: 70%; right: 60%; }
+
+        .cybr-tracker:hover ~ .cybr-card .cybr-title {
+            opacity: 1;
+            transform: translateY(-10px);
+        }
+
+        .cybr-tracker:hover ~ .cybr-card .cybr-glowing-elements div {
+            opacity: 1;
+        }
+
+        .cybr-tracker:hover ~ .cybr-card .cybr-card-particles span {
+            animation: cybr-particleFloat 2s infinite;
+        }
+
+        .cybr-tracker:hover ~ .cybr-card .cybr-card::before {
+            opacity: 1;
+        }
+
+        .cybr-tracker:hover ~ .cybr-card .cybr-prompt {
+            opacity: 0;
+        }
+
+        .cybr-tracker:hover ~ .cybr-card {
+            transition: 300ms;
+            filter: brightness(1.1);
+        }
+
+        .cybr-window:hover .cybr-card::before {
+            transition: 200ms;
+            content: "";
+            opacity: 80%;
+        }
+
+        .cybr-card:hover .cybr-card-glare {
+            opacity: 1;
+        }
+
+        .cybr-corner-elements span {
+            transition: all 0.3s ease;
+        }
+
+        .cybr-card:hover .cybr-corner-elements span {
+            border-color: rgba(92, 103, 255, 0.8);
+            box-shadow: 0 0 10px rgba(92, 103, 255, 0.5);
+        }
+
         .scan-header {
             display: flex;
             justify-content: space-between;
@@ -1439,6 +1837,61 @@
         <div class="main-content">
             <!-- Left Panel - Configuration -->
             <div class="left-panel">
+                <div class="cybr-window cybr-noselect">
+                    <div class="cybr-canvas">
+                        <div class="cybr-tracker cybr-tr-1"></div>
+                        <div class="cybr-tracker cybr-tr-2"></div>
+                        <div class="cybr-tracker cybr-tr-3"></div>
+                        <div class="cybr-tracker cybr-tr-4"></div>
+                        <div class="cybr-tracker cybr-tr-5"></div>
+                        <div class="cybr-tracker cybr-tr-6"></div>
+                        <div class="cybr-tracker cybr-tr-7"></div>
+                        <div class="cybr-tracker cybr-tr-8"></div>
+                        <div class="cybr-tracker cybr-tr-9"></div>
+                        <div class="cybr-tracker cybr-tr-10"></div>
+                        <div class="cybr-tracker cybr-tr-11"></div>
+                        <div class="cybr-tracker cybr-tr-12"></div>
+                        <div class="cybr-tracker cybr-tr-13"></div>
+                        <div class="cybr-tracker cybr-tr-14"></div>
+                        <div class="cybr-tracker cybr-tr-15"></div>
+                        <div class="cybr-tracker cybr-tr-16"></div>
+                        <div class="cybr-tracker cybr-tr-17"></div>
+                        <div class="cybr-tracker cybr-tr-18"></div>
+                        <div class="cybr-tracker cybr-tr-19"></div>
+                        <div class="cybr-tracker cybr-tr-20"></div>
+                        <div class="cybr-tracker cybr-tr-21"></div>
+                        <div class="cybr-tracker cybr-tr-22"></div>
+                        <div class="cybr-tracker cybr-tr-23"></div>
+                        <div class="cybr-tracker cybr-tr-24"></div>
+                        <div class="cybr-tracker cybr-tr-25"></div>
+                    </div>
+                    <div class="cybr-card">
+                        <div class="cybr-card-content">
+                            <div class="cybr-card-glare"></div>
+                            <div class="cybr-lines">
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <p class="cybr-prompt">CONFIGURATION</p>
+                            <div class="cybr-title">SYSTEM<br />CONTROL</div>
+                            <div class="cybr-glowing-elements">
+                                <div class="cybr-glow-1"></div>
+                                <div class="cybr-glow-2"></div>
+                                <div class="cybr-glow-3"></div>
+                            </div>
+                            <div class="cybr-subtitle">
+                                <span>INTERACTIVE</span>
+                                <span class="cybr-highlight">3D EFFECT</span>
+                            </div>
+                            <div class="cybr-card-particles">
+                                <span></span><span></span><span></span><span></span><span></span><span></span>
+                            </div>
+                            <div class="cybr-corner-elements">
+                                <span></span><span></span><span></span><span></span>
+                            </div>
+                            <div class="cybr-scan-line"></div>
+                        </div>
+                    </div>
+                </div>
                 <h2 class="panel-title">CONFIGURATION</h2>
                 
                 <!-- Interface Selection -->
@@ -1510,12 +1963,67 @@
 
                 <!-- Network Discovery - Cyberpunk Style from net_box.html -->
                 <div class="scanning-section">
+                    <div class="cybr-window cybr-noselect" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1;">
+                        <div class="cybr-canvas">
+                            <div class="cybr-tracker cybr-tr-1"></div>
+                            <div class="cybr-tracker cybr-tr-2"></div>
+                            <div class="cybr-tracker cybr-tr-3"></div>
+                            <div class="cybr-tracker cybr-tr-4"></div>
+                            <div class="cybr-tracker cybr-tr-5"></div>
+                            <div class="cybr-tracker cybr-tr-6"></div>
+                            <div class="cybr-tracker cybr-tr-7"></div>
+                            <div class="cybr-tracker cybr-tr-8"></div>
+                            <div class="cybr-tracker cybr-tr-9"></div>
+                            <div class="cybr-tracker cybr-tr-10"></div>
+                            <div class="cybr-tracker cybr-tr-11"></div>
+                            <div class="cybr-tracker cybr-tr-12"></div>
+                            <div class="cybr-tracker cybr-tr-13"></div>
+                            <div class="cybr-tracker cybr-tr-14"></div>
+                            <div class="cybr-tracker cybr-tr-15"></div>
+                            <div class="cybr-tracker cybr-tr-16"></div>
+                            <div class="cybr-tracker cybr-tr-17"></div>
+                            <div class="cybr-tracker cybr-tr-18"></div>
+                            <div class="cybr-tracker cybr-tr-19"></div>
+                            <div class="cybr-tracker cybr-tr-20"></div>
+                            <div class="cybr-tracker cybr-tr-21"></div>
+                            <div class="cybr-tracker cybr-tr-22"></div>
+                            <div class="cybr-tracker cybr-tr-23"></div>
+                            <div class="cybr-tracker cybr-tr-24"></div>
+                            <div class="cybr-tracker cybr-tr-25"></div>
+                        </div>
+                        <div class="cybr-card">
+                            <div class="cybr-card-content">
+                                <div class="cybr-card-glare"></div>
+                                <div class="cybr-lines">
+                                    <span></span><span></span><span></span><span></span>
+                                </div>
+                                <p class="cybr-prompt">NETWORK DISCOVERY</p>
+                                <div class="cybr-title">CYBER<br />SCAN</div>
+                                <div class="cybr-glowing-elements">
+                                    <div class="cybr-glow-1"></div>
+                                    <div class="cybr-glow-2"></div>
+                                    <div class="cybr-glow-3"></div>
+                                </div>
+                                <div class="cybr-subtitle">
+                                    <span>INTERACTIVE</span>
+                                    <span class="cybr-highlight">3D EFFECT</span>
+                                </div>
+                                <div class="cybr-card-particles">
+                                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                                </div>
+                                <div class="cybr-corner-elements">
+                                    <span></span><span></span><span></span><span></span>
+                                </div>
+                                <div class="cybr-scan-line"></div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="cyberpunk-network-container">
                         <div class="hologram">
                             <div class="cyberpunk-pattern"></div>
                             <div class="glow-effect"></div>
                             
-                            <div class="panel-header">
+                            <div class="panel-header" style="position: relative; z-index: 10;">
                                 <h2 class="panel-title">NETWORK DISCOVERY v3.4</h2>
                                 <div class="signal-indicator">
                                     <div class="signal-bars">

@@ -756,6 +756,160 @@
             100% { background-position: 0% 100%; }
         }
 
+        /* CYBR_INPUT Styles - Cyberpunk Input Design */
+        .cybr-input-component {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100%;
+            min-width: 100%;
+            background: #050a1a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cybr-input-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 255, 255, 0.05) 0px,
+                    rgba(0, 255, 255, 0.05) 1px,
+                    transparent 1px,
+                    transparent 20px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    rgba(0, 255, 255, 0.05) 0px,
+                    rgba(0, 255, 255, 0.05) 1px,
+                    transparent 1px,
+                    transparent 20px
+                );
+            animation: grid-move 2s linear infinite;
+            z-index: 0;
+        }
+
+        .cybr-input-frame {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: relative;
+            padding: 1.5rem;
+            width: 100%;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            z-index: 2;
+            animation: frame-pulse 5s infinite ease-in-out;
+        }
+
+        .cybr-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            z-index: 3;
+        }
+
+        .cybr-input {
+            flex: 1;
+            background: transparent;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            outline: none;
+            color: #00ffff;
+            font-family: "Orbitron", sans-serif;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            padding: 0.5rem 0.75rem;
+            caret-color: #00ffff;
+            transition: border 0.3s, box-shadow 0.3s;
+        }
+
+        .cybr-input:hover {
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
+        }
+
+        .cybr-input::placeholder {
+            color: rgba(0, 255, 255, 0.4);
+        }
+
+        .cybr-input-btn {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            margin-left: 0.75rem;
+            transition: all 0.4s ease;
+            clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+            transform: rotate(-1deg);
+        }
+
+        .cybr-input-btn:hover {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.8), 0 0 40px rgba(0, 255, 255, 0.5);
+            background: rgba(0, 255, 255, 0.08);
+            transform: rotate(-1deg) scale(1.1);
+        }
+
+        .cybr-input-btn:active {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.8), 0 0 40px rgba(0, 255, 255, 0.5);
+            background: rgba(0, 255, 255, 0.08);
+            transform: rotate(-2deg) scale(1);
+        }
+
+        .cybr-input-icon {
+            width: 1rem;
+            height: 1rem;
+            stroke: #00ffff;
+        }
+
+        .cybr-select {
+            flex: 1;
+            background: transparent;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            outline: none;
+            color: #00ffff;
+            font-family: "Orbitron", sans-serif;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            padding: 0.5rem 0.75rem;
+            transition: border 0.3s, box-shadow 0.3s;
+        }
+
+        .cybr-select:hover {
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.3);
+        }
+
+        .cybr-select option {
+            background: #050a1a;
+            color: #00ffff;
+        }
+
+        @keyframes grid-move {
+            0% {
+                background-position: 0 0, 0 0;
+            }
+            100% {
+                background-position: 40px 40px, 40px 40px;
+            }
+        }
+
+        @keyframes frame-pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.95;
+            }
+        }
+
         .scan-header {
             display: flex;
             justify-content: space-between;
@@ -1037,11 +1191,21 @@
                 <!-- Interface Selection -->
                 <div class="config-section">
                     <label class="config-label">WiFi Interface</label>
-                    <div class="interface-selector">
-                        <select class="config-select" id="wifiInterface">
-                            <option value="">Select Interface...</option>
-                        </select>
-                        <button class="cyber-button" onclick="loadInterfaces()" style="width: auto; padding: 10px;">Refresh</button>
+                    <div class="cybr-input-component">
+                        <div class="cybr-input-grid"></div>
+                        <div class="cybr-input-frame">
+                            <div class="cybr-input-wrapper">
+                                <select class="cybr-select" id="wifiInterface">
+                                    <option value="">Select Interface...</option>
+                                </select>
+                                <button class="cybr-input-btn" onclick="loadInterfaces()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="cybr-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M23 4v6h-6"></path>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1144,22 +1308,66 @@
                             </div>
                             
                             <!-- Advanced Network Controls -->
-                            <div class="network-controls" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                                <input type="text" id="networkSearch" placeholder="Search networks..." style="flex: 1; min-width: 200px; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--neon-blue); color: white; border-radius: 4px;">
-                                <select id="securityFilter" style="padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--neon-blue); color: white; border-radius: 4px;">
-                                    <option value="">All Security</option>
-                                    <option value="Open">Open</option>
-                                    <option value="WPA">WPA</option>
-                                    <option value="WPA2">WPA2</option>
-                                    <option value="WPA3">WPA3</option>
-                                </select>
-                                <select id="bandFilter" style="padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--neon-blue); color: white; border-radius: 4px;">
-                                    <option value="">All Bands</option>
-                                    <option value="2.4GHz">2.4GHz</option>
-                                    <option value="5GHz">5GHz</option>
-                                </select>
-                                <button onclick="applyFilters()" class="scan-button" style="padding: 8px 15px;">Filter</button>
-                                <button onclick="clearFilters()" class="scan-button" style="padding: 8px 15px;">Clear</button>
+                            <div class="network-controls" style="margin-bottom: 15px;">
+                                <!-- Search Input -->
+                                <div class="cybr-input-component" style="margin-bottom: 10px;">
+                                    <div class="cybr-input-grid"></div>
+                                    <div class="cybr-input-frame">
+                                        <div class="cybr-input-wrapper">
+                                            <input type="text" class="cybr-input" id="networkSearch" placeholder="Search networks...">
+                                            <button class="cybr-input-btn" onclick="applyFilters()">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="cybr-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <circle cx="11" cy="11" r="8"></circle>
+                                                    <path d="m21 21-4.35-4.35"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Filter Controls -->
+                                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                    <div class="cybr-input-component" style="flex: 1; min-width: 150px;">
+                                        <div class="cybr-input-grid"></div>
+                                        <div class="cybr-input-frame">
+                                            <div class="cybr-input-wrapper">
+                                                <select class="cybr-select" id="securityFilter">
+                                                    <option value="">All Security</option>
+                                                    <option value="Open">Open</option>
+                                                    <option value="WPA">WPA</option>
+                                                    <option value="WPA2">WPA2</option>
+                                                    <option value="WPA3">WPA3</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="cybr-input-component" style="flex: 1; min-width: 150px;">
+                                        <div class="cybr-input-grid"></div>
+                                        <div class="cybr-input-frame">
+                                            <div class="cybr-input-wrapper">
+                                                <select class="cybr-select" id="bandFilter">
+                                                    <option value="">All Bands</option>
+                                                    <option value="2.4GHz">2.4GHz</option>
+                                                    <option value="5GHz">5GHz</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button onclick="applyFilters()" class="cybr-input-btn" style="margin-left: 0;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="cybr-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3"></polygon>
+                                        </svg>
+                                    </button>
+                                    
+                                    <button onclick="clearFilters()" class="cybr-input-btn" style="margin-left: 0;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="cybr-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                             
                             <!-- Network Grid -->

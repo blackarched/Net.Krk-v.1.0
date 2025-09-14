@@ -1561,6 +1561,645 @@
             box-shadow: 0 0 10px rgba(92, 103, 255, 0.5);
         }
 
+        /* ATCK_BTN Styles - Holographic Attack Dashboard Button */
+        .attack-stars-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            perspective: 500px;
+            transform-style: preserve-3d;
+        }
+
+        .attack-star-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0.8;
+        }
+
+        .attack-star-layer:nth-child(1) {
+            transform: translateZ(-50px);
+            animation: attack-star-drift 150s linear infinite;
+        }
+
+        .attack-star-layer:nth-child(2) {
+            transform: translateZ(-100px);
+            animation: attack-star-drift 200s linear infinite reverse;
+            opacity: 0.6;
+        }
+
+        .attack-star-layer:nth-child(3) {
+            transform: translateZ(-200px);
+            animation: attack-star-drift 250s linear infinite;
+            opacity: 0.4;
+        }
+
+        @keyframes attack-star-drift {
+            0% {
+                transform: translateZ(-50px) translateY(0);
+            }
+            100% {
+                transform: translateZ(-50px) translateY(100%);
+            }
+        }
+
+        .attack-star-layer::before,
+        .attack-star-layer::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .attack-star-layer:nth-child(1)::before {
+            background-image: radial-gradient(1px 1px at 10% 10%, white 100%, transparent),
+                radial-gradient(1px 1px at 20% 20%, white 100%, transparent),
+                radial-gradient(2px 2px at 30% 30%, white 100%, transparent),
+                radial-gradient(1px 1px at 40% 40%, white 100%, transparent),
+                radial-gradient(2px 2px at 50% 50%, white 100%, transparent),
+                radial-gradient(1px 1px at 60% 60%, white 100%, transparent),
+                radial-gradient(2px 2px at 70% 70%, white 100%, transparent),
+                radial-gradient(1px 1px at 80% 80%, white 100%, transparent),
+                radial-gradient(2px 2px at 90% 90%, white 100%, transparent),
+                radial-gradient(1px 1px at 15% 85%, white 100%, transparent);
+        }
+
+        .attack-nebula {
+            position: absolute;
+            width: 120%;
+            height: 120%;
+            top: -10%;
+            left: -10%;
+            background: radial-gradient(ellipse at 30% 30%, rgba(63, 0, 113, 0.3) 0%, rgba(63, 0, 113, 0) 70%),
+                radial-gradient(ellipse at 70% 60%, rgba(0, 113, 167, 0.3) 0%, rgba(0, 113, 167, 0) 70%),
+                radial-gradient(ellipse at 50% 50%, rgba(167, 0, 157, 0.2) 0%, rgba(167, 0, 157, 0) 70%);
+            filter: blur(30px);
+            opacity: 0.5;
+            animation: attack-nebula-shift 30s infinite alternate ease-in-out;
+        }
+
+        @keyframes attack-nebula-shift {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(1.2) rotate(5deg);
+                opacity: 0.4;
+            }
+        }
+
+        .attack-grid-plane {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background-image: linear-gradient(rgba(0, 162, 255, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 162, 255, 0.15) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: center;
+            animation: attack-grid-move 20s linear infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes attack-grid-move {
+            0% {
+                transform: perspective(500px) rotateX(60deg) translateY(0);
+            }
+            100% {
+                transform: perspective(500px) rotateX(60deg) translateY(40px);
+            }
+        }
+
+        .attack-checkbox-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 300px;
+            height: 300px;
+            z-index: 10;
+        }
+
+        .attack-holo-checkbox-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .attack-holo-checkbox {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .attack-holo-box {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(0, 162, 255, 0.7);
+            border-radius: 12px;
+            background-color: rgba(0, 24, 55, 0.5);
+            box-shadow: 0 0 10px rgba(0, 162, 255, 0.5), inset 0 0 15px rgba(0, 162, 255, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }
+
+        .attack-holo-inner {
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            background-color: rgba(0, 162, 255, 0.5);
+            border-radius: 4px;
+            opacity: 0;
+            transform: scale(0) rotate(45deg);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 162, 255, 0.8);
+        }
+
+        .attack-scan-effect {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 162, 255, 0.8), transparent);
+            animation: attack-scan-off 4s infinite;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes attack-scan-off {
+            0% {
+                left: -100%;
+                opacity: 0.3;
+            }
+            100% {
+                left: 100%;
+                opacity: 0.3;
+            }
+        }
+
+        @keyframes attack-scan-on {
+            0% {
+                left: -100%;
+                opacity: 1;
+            }
+            100% {
+                left: 100%;
+                opacity: 1;
+            }
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-holo-box {
+            border-color: rgba(0, 255, 136, 0.7);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.6), inset 0 0 15px rgba(0, 255, 136, 0.4);
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-holo-inner {
+            background-color: rgba(0, 255, 136, 0.7);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 1);
+            opacity: 1;
+            transform: scale(1) rotate(45deg);
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-scan-effect {
+            animation: attack-scan-on 2s infinite;
+            opacity: 1;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.8), transparent);
+        }
+
+        .attack-holo-glow {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            left: -50%;
+            top: -50%;
+            background: radial-gradient(ellipse at center, rgba(0, 162, 255, 0.2) 0%, rgba(0, 162, 255, 0.1) 40%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
+            filter: blur(10px);
+            opacity: 0.5;
+            z-index: -1;
+            animation: attack-glow-pulse 4s infinite alternate;
+            transition: all 0.5s ease;
+        }
+
+        @keyframes attack-glow-pulse {
+            0% {
+                opacity: 0.3;
+                filter: blur(10px) brightness(0.8);
+            }
+            100% {
+                opacity: 0.6;
+                filter: blur(15px) brightness(1.2);
+            }
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-holo-glow {
+            background: radial-gradient(ellipse at center, rgba(0, 255, 136, 0.2) 0%, rgba(0, 255, 136, 0.1) 40%, rgba(0, 0, 0, 0) 70%);
+            animation: attack-active-glow-pulse 2s infinite alternate;
+        }
+
+        @keyframes attack-active-glow-pulse {
+            0% {
+                opacity: 0.4;
+                filter: blur(10px) brightness(1);
+            }
+            100% {
+                opacity: 0.8;
+                filter: blur(20px) brightness(1.5);
+            }
+        }
+
+        .attack-corner-accent {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border-style: solid;
+            border-width: 2px;
+            border-color: rgba(0, 162, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .attack-corner-accent:nth-child(1) {
+            top: -5px;
+            left: -5px;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 5px 0 0 0;
+        }
+
+        .attack-corner-accent:nth-child(2) {
+            top: -5px;
+            right: -5px;
+            border-left: none;
+            border-bottom: none;
+            border-radius: 0 5px 0 0;
+        }
+
+        .attack-corner-accent:nth-child(3) {
+            bottom: -5px;
+            left: -5px;
+            border-right: none;
+            border-top: none;
+            border-radius: 0 0 0 5px;
+        }
+
+        .attack-corner-accent:nth-child(4) {
+            bottom: -5px;
+            right: -5px;
+            border-left: none;
+            border-top: none;
+            border-radius: 0 0 5px 0;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-corner-accent {
+            width: 20px;
+            height: 20px;
+            border-color: rgba(0, 255, 136, 0.7);
+        }
+
+        .attack-status-text {
+            margin-top: 30px;
+            font-size: 16px;
+            font-weight: 500;
+            color: rgba(0, 162, 255, 0.8);
+            text-shadow: 0 0 5px rgba(0, 162, 255, 0.5);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .attack-status-text::before {
+            content: "ATTACK DASHBOARD DEACTIVATED";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .attack-holo-checkbox-input:checked ~ .attack-status-text::before {
+            content: "ATTACK DASHBOARD ACTIVATED";
+            color: rgba(0, 255, 136, 0.8);
+            text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+        }
+
+        .attack-activation-rings {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .attack-activation-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40%;
+            height: 40%;
+            border: 1px solid rgba(0, 255, 136, 0);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-activation-ring {
+            animation: attack-ring-expand 2s ease-out forwards;
+            border-color: rgba(0, 255, 136, 0.7);
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-activation-ring:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-activation-ring:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-activation-ring:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes attack-ring-expand {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        .attack-holo-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .attack-holo-particle {
+            position: absolute;
+            background-color: rgba(0, 162, 255, 0.7);
+            border-radius: 50%;
+            width: 3px;
+            height: 3px;
+            opacity: 0;
+            filter: blur(1px);
+            transition: all 0.3s ease;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-holo-particle {
+            background-color: rgba(0, 255, 136, 0.7);
+            animation: attack-particle-float 3s infinite ease-in-out;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-holo-particle:nth-child(1) {
+            top: 20%;
+            left: 30%;
+            animation-delay: 0.1s;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-holo-particle:nth-child(2) {
+            top: 70%;
+            left: 20%;
+            animation-delay: 0.7s;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-holo-particle:nth-child(3) {
+            top: 40%;
+            left: 80%;
+            animation-delay: 1.3s;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-holo-particle:nth-child(4) {
+            top: 60%;
+            left: 60%;
+            animation-delay: 1.9s;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-holo-particle:nth-child(5) {
+            top: 30%;
+            left: 45%;
+            animation-delay: 2.5s;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-holo-particle:nth-child(6) {
+            top: 60%;
+            left: 40%;
+            animation-delay: 3.1s;
+        }
+
+        @keyframes attack-particle-float {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-20px) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .attack-cube-transform {
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            transform-style: preserve-3d;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .attack-cube-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 162, 255, 0.3);
+            border: 1px solid rgba(0, 162, 255, 0.5);
+            box-shadow: 0 0 5px rgba(0, 162, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-cube-transform {
+            opacity: 1;
+            animation: attack-cube-rotate 5s infinite linear;
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-cube-face {
+            background-color: rgba(0, 255, 136, 0.3);
+            border-color: rgba(0, 255, 136, 0.5);
+            box-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-cube-face:nth-child(1) {
+            transform: translateZ(15px);
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-cube-face:nth-child(2) {
+            transform: rotateY(180deg) translateZ(15px);
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-cube-face:nth-child(3) {
+            transform: rotateY(90deg) translateZ(15px);
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-cube-face:nth-child(4) {
+            transform: rotateY(-90deg) translateZ(15px);
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-cube-face:nth-child(5) {
+            transform: rotateX(90deg) translateZ(15px);
+        }
+
+        .attack-holo-checkbox-input:checked + .attack-holo-checkbox .attack-cube-face:nth-child(6) {
+            transform: rotateX(-90deg) translateZ(15px);
+        }
+
+        @keyframes attack-cube-rotate {
+            0% {
+                transform: rotateX(0) rotateY(0) rotateZ(0);
+            }
+            100% {
+                transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg);
+            }
+        }
+
+        .attack-frequency-spectrum {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 40px;
+            width: 260px;
+            margin-top: 30px;
+            gap: 3px;
+        }
+
+        .attack-frequency-bar {
+            width: 4px;
+            height: 5px;
+            background: rgba(0, 162, 255, 0.5);
+            border-radius: 2px 2px 0 0;
+            transition: height 0.3s ease, background 0.3s ease;
+        }
+
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar {
+            background: rgba(0, 255, 136, 0.5);
+            animation: attack-frequency-animation 1.5s infinite ease;
+        }
+
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(1) { animation-delay: 0.1s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(2) { animation-delay: 0.2s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(3) { animation-delay: 0.1s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(4) { animation-delay: 0.3s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(5) { animation-delay: 0.5s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(6) { animation-delay: 0.2s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(7) { animation-delay: 0.4s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(8) { animation-delay: 0.1s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(9) { animation-delay: 0.3s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(10) { animation-delay: 0.2s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(11) { animation-delay: 0.5s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(12) { animation-delay: 0.3s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(13) { animation-delay: 0.1s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(14) { animation-delay: 0.4s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(15) { animation-delay: 0.2s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(16) { animation-delay: 0.3s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(17) { animation-delay: 0.1s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(18) { animation-delay: 0.5s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(19) { animation-delay: 0.2s; }
+        .attack-holo-checkbox-input:checked ~ .attack-frequency-spectrum .attack-frequency-bar:nth-child(20) { animation-delay: 0.4s; }
+
+        @keyframes attack-frequency-animation {
+            0% { height: 5px; }
+            50% { height: 35px; }
+            100% { height: 5px; }
+        }
+
+        .attack-data-chips {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            color: white;
+        }
+
+        .attack-data-chip {
+            position: absolute;
+            padding: 5px 8px;
+            background-color: rgba(0, 24, 55, 0.7);
+            border: 1px solid rgba(0, 162, 255, 0.5);
+            border-radius: 4px;
+            font-size: 10px;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s ease;
+        }
+
+        .attack-holo-checkbox-input:checked ~ .attack-data-chips .attack-data-chip {
+            animation: attack-chip-appear 0.5s ease forwards;
+            border-color: rgba(0, 255, 136, 0.5);
+        }
+
+        @keyframes attack-chip-appear {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .attack-data-chip:nth-child(1) {
+            top: -60px;
+            left: 50px;
+            animation-delay: 0.5s;
+        }
+
+        .attack-data-chip:nth-child(2) {
+            top: 40px;
+            left: -120px;
+            animation-delay: 1.2s;
+        }
+
+        .attack-data-chip:nth-child(3) {
+            top: 120px;
+            left: 60px;
+            animation-delay: 1.8s;
+        }
+
+        .attack-data-chip:nth-child(4) {
+            top: 20px;
+            left: 120px;
+            animation-delay: 2.3s;
+        }
+
         .scan-header {
             display: flex;
             justify-content: space-between;
@@ -1733,12 +2372,15 @@
         .log-entry.warning { color: var(--neon-yellow); }
         .log-entry.error { color: #ff4444; }
 
-        /* Attack Dashboard Link */
+        /* Attack Dashboard Link - Holographic Design */
         .attack-dashboard-link {
             position: fixed;
             top: 20px;
             right: 20px;
-            z-index: 100;
+            z-index: 1000;
+            width: 300px;
+            height: 300px;
+            overflow: hidden;
         }
 
         .attack-link-button {
@@ -1817,9 +2459,85 @@
     <!-- Holographic Particles -->
     <div class="holographic-particles" id="particles"></div>
     
-    <!-- Attack Dashboard Link -->
+    <!-- Attack Dashboard Link - Holographic Design -->
     <div class="attack-dashboard-link">
-        <a href="/attack" class="attack-link-button">ATTACK DASHBOARD</a>
+        <div class="attack-grid-plane"></div>
+        <div class="attack-stars-container">
+            <div class="attack-star-layer"></div>
+            <div class="attack-star-layer"></div>
+            <div class="attack-star-layer"></div>
+        </div>
+        <div class="attack-checkbox-container">
+            <input class="attack-holo-checkbox-input" id="attack-holo-check" type="checkbox" onchange="toggleAttackDashboard()" />
+            <label class="attack-holo-checkbox" for="attack-holo-check">
+                <div class="attack-holo-box">
+                    <div class="attack-holo-inner"></div>
+                    <div class="attack-scan-effect"></div>
+                    <div class="attack-holo-particles">
+                        <div class="attack-holo-particle"></div>
+                        <div class="attack-holo-particle"></div>
+                        <div class="attack-holo-particle"></div>
+                        <div class="attack-holo-particle"></div>
+                        <div class="attack-holo-particle"></div>
+                        <div class="attack-holo-particle"></div>
+                    </div>
+
+                    <div class="attack-activation-rings">
+                        <div class="attack-activation-ring"></div>
+                        <div class="attack-activation-ring"></div>
+                        <div class="attack-activation-ring"></div>
+                    </div>
+
+                    <div class="attack-cube-transform">
+                        <div class="attack-cube-face"></div>
+                        <div class="attack-cube-face"></div>
+                        <div class="attack-cube-face"></div>
+                        <div class="attack-cube-face"></div>
+                        <div class="attack-cube-face"></div>
+                        <div class="attack-cube-face"></div>
+                    </div>
+                </div>
+
+                <div class="attack-corner-accent"></div>
+                <div class="attack-corner-accent"></div>
+                <div class="attack-corner-accent"></div>
+                <div class="attack-corner-accent"></div>
+
+                <div class="attack-holo-glow"></div>
+            </label>
+
+            <div class="attack-status-text"></div>
+
+            <div class="attack-frequency-spectrum">
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+                <div class="attack-frequency-bar"></div>
+            </div>
+
+            <div class="attack-data-chips">
+                <div class="attack-data-chip">STATUS: IDLE [0x4F]</div>
+                <div class="attack-data-chip">QUANTUM VERIFY: 82.6%</div>
+                <div class="attack-data-chip">SYNCH: PENDING</div>
+                <div class="attack-data-chip">0x7A2C8B9F</div>
+            </div>
+        </div>
     </div>
 
     <!-- Main Container -->
@@ -3133,6 +3851,44 @@
                 });
             }
         });
+
+        // Attack Dashboard Toggle Function
+        function toggleAttackDashboard() {
+            const checkbox = document.getElementById('attack-holo-check');
+            const isActivated = checkbox.checked;
+            
+            if (isActivated) {
+                // Activate attack dashboard
+                addLogEntry('info', 'Activating Attack Dashboard...');
+                
+                // Update data chips with activation status
+                const dataChips = document.querySelectorAll('.attack-data-chip');
+                if (dataChips.length >= 4) {
+                    dataChips[0].textContent = 'STATUS: ACTIVE [0x4F]';
+                    dataChips[1].textContent = 'QUANTUM VERIFY: 100%';
+                    dataChips[2].textContent = 'SYNCH: COMPLETE';
+                    dataChips[3].textContent = '0x7A2C8B9F';
+                }
+                
+                // Navigate to attack dashboard
+                setTimeout(() => {
+                    window.location.href = '/attack';
+                }, 1000);
+                
+            } else {
+                // Deactivate attack dashboard
+                addLogEntry('info', 'Deactivating Attack Dashboard...');
+                
+                // Update data chips with deactivation status
+                const dataChips = document.querySelectorAll('.attack-data-chip');
+                if (dataChips.length >= 4) {
+                    dataChips[0].textContent = 'STATUS: IDLE [0x4F]';
+                    dataChips[1].textContent = 'QUANTUM VERIFY: 82.6%';
+                    dataChips[2].textContent = 'SYNCH: PENDING';
+                    dataChips[3].textContent = '0x7A2C8B9F';
+                }
+            }
+        }
     </script>
 </body>
 </html>

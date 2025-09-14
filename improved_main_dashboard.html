@@ -2383,6 +2383,198 @@
             overflow: hidden;
         }
 
+        /* Attack System Styles */
+        .attack-system {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .attack-panel {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 136, 0.1));
+            border: 2px solid #00ffff;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.3);
+        }
+
+        .attack-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #00ffff;
+        }
+
+        .attack-header h3 {
+            color: #00ffff;
+            font-family: 'Orbitron', monospace;
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .close-attack {
+            background: none;
+            border: 1px solid #ff0088;
+            color: #ff0088;
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-attack:hover {
+            background: #ff0088;
+            color: #000;
+        }
+
+        .attack-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .attack-module {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .attack-module::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .attack-module:hover::before {
+            left: 100%;
+        }
+
+        .attack-module:hover {
+            background: rgba(0, 255, 255, 0.1);
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .attack-module.active {
+            background: rgba(255, 0, 136, 0.1);
+            border-color: #ff0088;
+            box-shadow: 0 0 25px rgba(255, 0, 136, 0.4);
+        }
+
+        .attack-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .attack-name {
+            color: #00ffff;
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .attack-description {
+            color: #888;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .attack-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .attack-execute-btn, .attack-stop-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .attack-execute-btn {
+            background: linear-gradient(45deg, #00ffff, #0088ff);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .attack-execute-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+
+        .attack-execute-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .attack-stop-btn {
+            background: linear-gradient(45deg, #ff0088, #ff4444);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 136, 0.3);
+        }
+
+        .attack-stop-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 0, 136, 0.5);
+        }
+
+        .attack-status {
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+
+        .status-indicator {
+            color: #00ff00;
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .status-text {
+            color: #888;
+            font-size: 14px;
+        }
+
         .attack-link-button {
             background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple));
             border: none;
@@ -2459,6 +2651,64 @@
     <!-- Holographic Particles -->
     <div class="holographic-particles" id="particles"></div>
     
+    <!-- Attack System -->
+    <div class="attack-system" id="attackSystem" style="display: none;">
+        <div class="attack-panel">
+            <div class="attack-header">
+                <h3>ATTACK MODULES</h3>
+                <button class="close-attack" onclick="closeAttackSystem()">×</button>
+            </div>
+            
+            <div class="attack-grid">
+                <div class="attack-module" onclick="selectAttack('deauth')">
+                    <div class="attack-icon">📡</div>
+                    <div class="attack-name">Deauth Attack</div>
+                    <div class="attack-description">Disconnect devices from target network</div>
+                </div>
+                <div class="attack-module" onclick="selectAttack('handshake_capture')">
+                    <div class="attack-icon">🤝</div>
+                    <div class="attack-name">Handshake Capture</div>
+                    <div class="attack-description">Capture WPA/WPA2 handshakes</div>
+                </div>
+                <div class="attack-module" onclick="selectAttack('beacon_flood')">
+                    <div class="attack-icon">📡</div>
+                    <div class="attack-name">Beacon Flood</div>
+                    <div class="attack-description">Flood area with fake access points</div>
+                </div>
+                <div class="attack-module" onclick="selectAttack('evil_twin')">
+                    <div class="attack-icon">👥</div>
+                    <div class="attack-name">Evil Twin</div>
+                    <div class="attack-description">Create fake access point</div>
+                </div>
+                <div class="attack-module" onclick="selectAttack('wps')">
+                    <div class="attack-icon">🔐</div>
+                    <div class="attack-name">WPS Attack</div>
+                    <div class="attack-description">Exploit WPS vulnerabilities</div>
+                </div>
+                <div class="attack-module" onclick="selectAttack('fragmentation')">
+                    <div class="attack-icon">💥</div>
+                    <div class="attack-name">Fragmentation</div>
+                    <div class="attack-description">Fragmentation attack on WEP</div>
+                </div>
+                <div class="attack-module" onclick="selectAttack('credential')">
+                    <div class="attack-icon">🔑</div>
+                    <div class="attack-name">Credential Harvest</div>
+                    <div class="attack-description">Capture login credentials</div>
+                </div>
+            </div>
+            
+            <div class="attack-controls">
+                <button class="attack-execute-btn" id="executeAttackBtn" onclick="executeAttack()" disabled>EXECUTE ATTACK</button>
+                <button class="attack-stop-btn" onclick="stopAllAttacks()">STOP ALL ATTACKS</button>
+            </div>
+            
+            <div class="attack-status" id="attackStatus">
+                <div class="status-indicator">READY</div>
+                <div class="status-text">Select an attack module to begin</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Attack Dashboard Link - Holographic Design -->
     <div class="attack-dashboard-link">
         <div class="attack-grid-plane"></div>
@@ -3870,10 +4120,8 @@
                     dataChips[3].textContent = '0x7A2C8B9F';
                 }
                 
-                // Navigate to attack dashboard
-                setTimeout(() => {
-                    window.location.href = '/attack';
-                }, 1000);
+                // Show attack system instead of redirecting
+                document.getElementById('attackSystem').style.display = 'flex';
                 
             } else {
                 // Deactivate attack dashboard
@@ -3888,6 +4136,122 @@
                     dataChips[3].textContent = '0x7A2C8B9F';
                 }
             }
+        }
+
+        // Attack System Variables
+        let selectedAttack = null;
+        let isAttacking = false;
+
+        // Attack System Functions
+        function selectAttack(attackType) {
+            // Remove active class from all modules
+            document.querySelectorAll('.attack-module').forEach(module => {
+                module.classList.remove('active');
+            });
+            
+            // Add active class to selected module
+            event.target.closest('.attack-module').classList.add('active');
+            selectedAttack = attackType;
+            
+            // Enable execute button
+            document.getElementById('executeAttackBtn').disabled = false;
+            
+            // Update status
+            updateAttackStatus('READY', `Selected: ${attackType.toUpperCase()}`);
+            
+            addLogEntry('info', `Selected attack: ${attackType}`);
+        }
+
+        function closeAttackSystem() {
+            document.getElementById('attackSystem').style.display = 'none';
+            document.getElementById('attack-holo-check').checked = false;
+            selectedAttack = null;
+            isAttacking = false;
+            document.getElementById('executeAttackBtn').disabled = true;
+            updateAttackStatus('READY', 'Select an attack module to begin');
+        }
+
+        function executeAttack() {
+            if (!selectedAttack || isAttacking) return;
+            
+            isAttacking = true;
+            const executeBtn = document.getElementById('executeAttackBtn');
+            executeBtn.disabled = true;
+            executeBtn.innerHTML = '<div class="loading"></div> EXECUTING...';
+            
+            updateAttackStatus('EXECUTING', `Running ${selectedAttack.toUpperCase()} attack...`);
+            addLogEntry('info', `Executing ${selectedAttack} attack...`);
+            
+            // Get available targets first
+            fetch('/api/targets')
+                .then(response => response.json())
+                .then(targetData => {
+                    const target = targetData.targets && targetData.targets.length > 0 ? targetData.targets[0] : {
+                        ssid: 'TestNetwork',
+                        bssid: '00:11:22:33:44:55',
+                        channel: 6
+                    };
+
+                    // Execute real attack
+                    return fetch('/api/execute-attack', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            attack_type: selectedAttack,
+                            target: target
+                        })
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateAttackStatus('SUCCESS', `${selectedAttack.toUpperCase()} attack completed successfully`);
+                        addLogEntry('success', `${selectedAttack} attack completed successfully`);
+                    } else {
+                        updateAttackStatus('FAILED', `${selectedAttack.toUpperCase()} attack failed: ${data.error || 'Unknown error'}`);
+                        addLogEntry('error', `${selectedAttack} attack failed: ${data.error || 'Unknown error'}`);
+                    }
+                })
+                .catch(error => {
+                    updateAttackStatus('ERROR', `Attack execution failed: ${error.message}`);
+                    addLogEntry('error', `Attack execution failed: ${error.message}`);
+                })
+                .finally(() => {
+                    isAttacking = false;
+                    executeBtn.disabled = false;
+                    executeBtn.innerHTML = 'EXECUTE ATTACK';
+                });
+        }
+
+        function stopAllAttacks() {
+            fetch('/api/attack/stop', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateAttackStatus('STOPPED', 'All attacks stopped');
+                    addLogEntry('info', 'All attacks stopped');
+                } else {
+                    addLogEntry('error', 'Failed to stop attacks');
+                }
+            })
+            .catch(error => {
+                addLogEntry('error', `Failed to stop attacks: ${error.message}`);
+            });
+        }
+
+        function updateAttackStatus(status, message) {
+            const statusIndicator = document.querySelector('.status-indicator');
+            const statusText = document.querySelector('.status-text');
+            
+            if (statusIndicator) statusIndicator.textContent = status;
+            if (statusText) statusText.textContent = message;
         }
     </script>
 </body>

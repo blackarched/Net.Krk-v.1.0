@@ -4,7 +4,11 @@ import re
 import time
 import json
 import os
+import logging
 from network_discovery import network_discovery
+from cache_manager import cache_manager
+from error_handler import error_handler, handle_errors
+from monitor_mode_manager import monitor_mode_manager
 
 app = Flask(__name__)
 app.secret_key = 'netkrak_combined_2024'
@@ -1098,46 +1102,36 @@ def api_attack_stats():
 
 
 @app.route('/api/monitor-mode', methods=['POST'])
+@handle_errors("Monitor mode operation", "Failed to toggle monitor mode")
 def api_monitor_mode():
-    """Enable/disable monitor mode for an interface - COMPLETELY AUTOMATIC"""
-    try:
-        data = request.get_json()
-        interface = data.get('interface', 'wlan0')
-        automatic = data.get('automatic', False)
-        
-        # Simulate monitor mode toggle (since we don't have iwconfig/airmon-ng in this environment)
-        # In a real environment, this would use the actual commands
-        add_log_entry('info', f'Checking monitor mode status for {interface}')
-        
-        # Real monitor mode check
-        try:
-            import subprocess
-            result = subprocess.run(['iwconfig', interface], capture_output=True, text=True, timeout=5)
-            is_monitor = 'Mode:Monitor' in result.stdout
-        except:
-            is_monitor = False
-        
-        if is_monitor:
-            add_log_entry('info', f'Monitor mode automatically disabled for {interface}')
-            return jsonify({
-                'success': True,
-                'monitor_mode': False,
-                'message': f'Monitor mode automatically disabled for {interface}'
-            })
-        else:
-            add_log_entry('info', f'Monitor mode automatically enabled for {interface}')
-            return jsonify({
-                'success': True,
-                'monitor_mode': True,
-                'message': f'Monitor mode automatically enabled for {interface}'
-            })
-            
-    except Exception as e:
-        add_log_entry('error', f'Monitor mode error: {e}')
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        })
+    """Enable/disable monitor mode for an interface - NO PASSWORD REQUIRED"""
+    data = request.get_json()
+    interface = data.get('interface', 'wlan0')
+    action = data.get('action', 'toggle')  # 'enable', 'disable', or 'toggle'
+    
+    add_log_entry('info', f'Monitor mode operation: {action} for {interface}')
+    
+    # Check current status
+    is_monitor = monitor_mode_manager.is_monitor_mode(interface)
+    
+    if action == 'enable' or (action == 'toggle' and not is_monitor):
+        result = monitor_mode_manager.enable_monitor_mode(interface)
+    elif action == 'disable' or (action == 'toggle' and is_monitor):
+        result = monitor_mode_manager.disable_monitor_mode(interface)
+    else:
+        result = {
+            'success': True,
+            'monitor_mode': is_monitor,
+            'message': f'Interface {interface} status unchanged',
+            'interface': interface
+        }
+    
+    if result['success']:
+        add_log_entry('info', result['message'])
+    else:
+        add_log_entry('error', result['message'])
+    
+    return jsonify(result)
 
 @app.route('/api/start-scan', methods=['POST'])
 def api_start_scan():
@@ -1210,20 +1204,29 @@ def api_scan_results():
         })
 
 @app.route('/api/interfaces')
+@handle_errors("Interface detection", "Failed to get network interfaces")
 def api_interfaces():
-    """Get available network interfaces"""
+    """Get available network interfaces with caching"""
+    cache_key = cache_manager.get_interface_cache_key()
+    cached_data = cache_manager.get(cache_key)
+    
+    if cached_data:
+        return jsonify(cached_data)
+    
     try:
         interfaces = network_discovery.get_available_interfaces()
-        return jsonify({
+        result = {
             'success': True,
-            'interfaces': interfaces
-        })
+            'interfaces': interfaces,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # Cache for 2 minutes
+        cache_manager.set(cache_key, result, ttl=120)
+        return jsonify(result)
+        
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'interfaces': []
-        })
+        return error_handler.handle_network_error(e, "interface detection")
 
 @app.route('/api/network-details/<bssid>')
 def api_network_details(bssid):

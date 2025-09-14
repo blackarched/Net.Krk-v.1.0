@@ -1095,6 +1095,25 @@
                                 </div>
                             </div>
                             
+                            <!-- Advanced Network Controls -->
+                            <div class="network-controls" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <input type="text" id="networkSearch" placeholder="Search networks..." style="flex: 1; min-width: 200px; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--neon-blue); color: white; border-radius: 4px;">
+                                <select id="securityFilter" style="padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--neon-blue); color: white; border-radius: 4px;">
+                                    <option value="">All Security</option>
+                                    <option value="Open">Open</option>
+                                    <option value="WPA">WPA</option>
+                                    <option value="WPA2">WPA2</option>
+                                    <option value="WPA3">WPA3</option>
+                                </select>
+                                <select id="bandFilter" style="padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid var(--neon-blue); color: white; border-radius: 4px;">
+                                    <option value="">All Bands</option>
+                                    <option value="2.4GHz">2.4GHz</option>
+                                    <option value="5GHz">5GHz</option>
+                                </select>
+                                <button onclick="applyFilters()" class="scan-button" style="padding: 8px 15px;">Filter</button>
+                                <button onclick="clearFilters()" class="scan-button" style="padding: 8px 15px;">Clear</button>
+                            </div>
+                            
                             <!-- Network Grid -->
                             <div class="network-grid" id="networkDiscovery">
                                 <div class="log-entry info">System Initialized. Select WiFi interface and begin scan.</div>
@@ -1102,8 +1121,12 @@
                             
                             <div class="footer">
                                 <div id="lastScanTime">Last scan: --:--:--</div>
-                                <button class="scan-button" onclick="startNetworkScan()" id="scanButton">SCAN NETWORKS</button>
-                                <button class="scan-button" onclick="stopNetworkScan()" id="stopButton" style="display: none;">STOP SCAN</button>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <button class="scan-button" onclick="startNetworkScan()" id="scanButton">SCAN NETWORKS</button>
+                                    <button class="scan-button" onclick="stopNetworkScan()" id="stopButton" style="display: none;">STOP SCAN</button>
+                                    <button class="scan-button" onclick="startContinuousMonitoring()" id="monitorButton">START MONITORING</button>
+                                    <button class="scan-button" onclick="stopContinuousMonitoring()" id="stopMonitorButton" style="display: none;">STOP MONITORING</button>
+                                </div>
                                 <div id="networkCount">Networks: 0 visible</div>
                             </div>
                         </div>
@@ -1668,16 +1691,13 @@
         // Initialize dashboard when DOM is loaded
         document.addEventListener('DOMContentLoaded', initializeDashboard);
 
-        // --- Three.js Hologram Functionality from net_box.html ---
+        // --- Enhanced Network Discovery with Real API Integration ---
         let hologramScene, hologramCamera, hologramRenderer, hologramGroup, hologramParticles;
         let currentNetworkIndex = 0;
-        const mockNetworks = [
-            { name: "CYBERCORE-NEXUS", bssid: "0A:11:22:33:44:55", channel: 11, frequency: "2.4", signal: -45, security: "WPA3-Personal", encryption: "AES-256" },
-            { name: "GHOST_SIGNAL_5G", bssid: "B2:99:88:77:66:55", channel: 149, frequency: "5.0", signal: -62, security: "WPA3-Enterprise", encryption: "AES-256" },
-            { name: "DataHaven-7", bssid: "C3:AA:BB:CC:DD:EE", channel: 6, frequency: "2.4", signal: -78, security: "WPA2-Personal", encryption: "AES-128" },
-            { name: "NetRunner_Zero", bssid: "D4:FF:00:11:22:33", channel: 44, frequency: "5.0", signal: -51, security: "WPA3-Personal", encryption: "AES-256" },
-            { name: "Public_Grid_04", bssid: "E5:00:11:22:33:44", channel: 1, frequency: "2.4", signal: -85, security: "Open", encryption: "None" }
-        ];
+        let discoveredNetworks = [];
+        let networkAnalytics = {};
+        let continuousMonitoring = false;
+        let monitoringInterval = null;
 
         // Initialize hologram
         function initHologram() {
@@ -1793,39 +1813,294 @@
             });
         }
 
-        // Simulate network discovery
-        function simulateNetworkDiscovery() {
-            setInterval(() => {
-                if (isScanning) {
-                    currentNetworkIndex = (currentNetworkIndex + 1) % mockNetworks.length;
-                    updateNetworkInfo(mockNetworks[currentNetworkIndex]);
+        // Real network discovery with API integration
+        async function loadNetworkData() {
+            try {
+                const response = await fetch('/api/scan-results');
+                const data = await response.json();
+                
+                if (data.networks) {
+                    discoveredNetworks = data.networks;
+                    networkAnalytics = data.analytics || {};
+                    updateNetworkDisplay();
+                    updateAnalyticsDisplay();
                 }
-            }, 5000);
+            } catch (error) {
+                console.error('Failed to load network data:', error);
+                addLogEntry('error', `Failed to load network data: ${error.message}`);
+            }
         }
 
-        // Enhanced scan button functionality
+        // Update network display with real data
+        function updateNetworkDisplay() {
+            if (discoveredNetworks.length > 0) {
+                // Update hologram with first network
+                updateNetworkInfo(discoveredNetworks[0]);
+                
+                // Update network cards
+                displayNetworks(discoveredNetworks);
+            } else {
+                // Show no networks message
+                const networkGrid = document.getElementById('networkDiscovery');
+                if (networkGrid) {
+                    networkGrid.innerHTML = '<div class="log-entry info">No networks discovered. Start scanning to find networks.</div>';
+                }
+            }
+        }
+
+        // Update analytics display
+        function updateAnalyticsDisplay() {
+            if (networkAnalytics.total_networks) {
+                const networkCountElement = document.getElementById('networkCount');
+                if (networkCountElement) {
+                    networkCountElement.textContent = `Networks: ${networkAnalytics.total_networks} visible`;
+                }
+            }
+        }
+
+        // Enhanced scan button functionality with real API
         const originalStartNetworkScan = startNetworkScan;
         startNetworkScan = async function() {
-            await originalStartNetworkScan();
-            
-            // Update network info when scan starts
-            if (mockNetworks.length > 0) {
-                updateNetworkInfo(mockNetworks[0]);
-            }
-            
-            // Update last scan time
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
-            const lastScanElement = document.getElementById('lastScanTime');
-            if (lastScanElement) {
-                lastScanElement.textContent = `Last scan: ${timeString}`;
+            try {
+                const interface = document.getElementById('wifiInterface').value || 'wlan0';
+                
+                // Start enhanced scan
+                const response = await fetch('/api/start-scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        interface: interface,
+                        continuous: false
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLogEntry('info', 'Enhanced network scan started');
+                    
+                    // Update UI
+                    const scanButton = document.getElementById('scanButton');
+                    const stopButton = document.getElementById('stopButton');
+                    const statusDot = document.getElementById('scanStatusDot');
+                    const statusText = document.getElementById('scanStatusText');
+                    
+                    if (scanButton) scanButton.style.display = 'none';
+                    if (stopButton) stopButton.style.display = 'block';
+                    if (statusDot) statusDot.style.background = '#ffef00';
+                    if (statusText) statusText.textContent = 'SCANNING...';
+                    
+                    // Load network data after a short delay
+                    setTimeout(async () => {
+                        await loadNetworkData();
+                        
+                        // Update last scan time
+                        const now = new Date();
+                        const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+                        const lastScanElement = document.getElementById('lastScanTime');
+                        if (lastScanElement) {
+                            lastScanElement.textContent = `Last scan: ${timeString}`;
+                        }
+                        
+                        // Reset UI
+                        if (scanButton) scanButton.style.display = 'block';
+                        if (stopButton) stopButton.style.display = 'none';
+                        if (statusDot) statusDot.style.background = '#00ff9d';
+                        if (statusText) statusText.textContent = 'READY';
+                    }, 3000);
+                    
+                } else {
+                    addLogEntry('error', `Scan failed: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Scan error:', error);
+                addLogEntry('error', `Scan error: ${error.message}`);
             }
         };
 
-        // Initialize hologram when DOM is loaded
+        // Advanced filtering and search functions
+        async function applyFilters() {
+            const searchQuery = document.getElementById('networkSearch').value;
+            const securityFilter = document.getElementById('securityFilter').value;
+            const bandFilter = document.getElementById('bandFilter').value;
+            
+            try {
+                let filteredNetworks = discoveredNetworks;
+                
+                // Apply search filter
+                if (searchQuery) {
+                    const response = await fetch(`/api/search-networks?q=${encodeURIComponent(searchQuery)}`);
+                    const data = await response.json();
+                    if (data.success) {
+                        filteredNetworks = data.networks;
+                    }
+                }
+                
+                // Apply other filters
+                const filters = {};
+                if (securityFilter) filters.security = securityFilter;
+                if (bandFilter) filters.band = bandFilter;
+                
+                if (Object.keys(filters).length > 0) {
+                    const response = await fetch('/api/filter-networks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(filters)
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        filteredNetworks = data.networks;
+                    }
+                }
+                
+                // Update display with filtered results
+                displayNetworks(filteredNetworks);
+                addLogEntry('info', `Filtered to ${filteredNetworks.length} networks`);
+                
+            } catch (error) {
+                console.error('Filter error:', error);
+                addLogEntry('error', `Filter error: ${error.message}`);
+            }
+        }
+        
+        function clearFilters() {
+            document.getElementById('networkSearch').value = '';
+            document.getElementById('securityFilter').value = '';
+            document.getElementById('bandFilter').value = '';
+            displayNetworks(discoveredNetworks);
+            addLogEntry('info', 'Filters cleared');
+        }
+        
+        // Enhanced network selection with detailed view
+        async function selectNetwork(ssid, bssid, channel, frequency, signal, security, encryption) {
+            try {
+                // Get detailed network information
+                const response = await fetch(`/api/network-details/${bssid}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const network = data.network;
+                    updateNetworkInfo(network);
+                    addLogEntry('info', `Selected network: ${ssid} (${bssid})`);
+                } else {
+                    // Fallback to basic info
+                    const network = {
+                        name: ssid,
+                        bssid: bssid,
+                        channel: channel,
+                        frequency: frequency,
+                        signal: signal,
+                        security: security,
+                        encryption: encryption
+                    };
+                    updateNetworkInfo(network);
+                }
+            } catch (error) {
+                console.error('Network selection error:', error);
+                // Fallback to basic info
+                const network = {
+                    name: ssid,
+                    bssid: bssid,
+                    channel: channel,
+                    frequency: frequency,
+                    signal: signal,
+                    security: security,
+                    encryption: encryption
+                };
+                updateNetworkInfo(network);
+            }
+        }
+        
+        // Continuous monitoring functions
+        async function startContinuousMonitoring() {
+            try {
+                const interface = document.getElementById('wifiInterface').value || 'wlan0';
+                const interval = 30; // 30 seconds
+                
+                const response = await fetch('/api/start-monitoring', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        interface: interface,
+                        interval: interval
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    continuousMonitoring = true;
+                    addLogEntry('info', `Continuous monitoring started (${interval}s interval)`);
+                    
+                    // Update UI
+                    const monitorButton = document.getElementById('monitorButton');
+                    const stopMonitorButton = document.getElementById('stopMonitorButton');
+                    if (monitorButton) monitorButton.style.display = 'none';
+                    if (stopMonitorButton) stopMonitorButton.style.display = 'block';
+                    
+                    // Start periodic data refresh
+                    monitoringInterval = setInterval(async () => {
+                        await loadNetworkData();
+                    }, interval * 1000);
+                    
+                } else {
+                    addLogEntry('error', `Monitoring failed: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Monitoring error:', error);
+                addLogEntry('error', `Monitoring error: ${error.message}`);
+            }
+        }
+        
+        async function stopContinuousMonitoring() {
+            try {
+                const response = await fetch('/api/stop-monitoring', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    continuousMonitoring = false;
+                    if (monitoringInterval) {
+                        clearInterval(monitoringInterval);
+                        monitoringInterval = null;
+                    }
+                    
+                    // Update UI
+                    const monitorButton = document.getElementById('monitorButton');
+                    const stopMonitorButton = document.getElementById('stopMonitorButton');
+                    if (monitorButton) monitorButton.style.display = 'block';
+                    if (stopMonitorButton) stopMonitorButton.style.display = 'none';
+                    
+                    addLogEntry('info', 'Continuous monitoring stopped');
+                }
+            } catch (error) {
+                console.error('Stop monitoring error:', error);
+                addLogEntry('error', `Stop monitoring error: ${error.message}`);
+            }
+        }
+
+        // Initialize enhanced network discovery when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(initHologram, 1000); // Delay to ensure Three.js is loaded
-            simulateNetworkDiscovery();
+            loadNetworkData(); // Load real network data
+            
+            // Add event listeners for search
+            const searchInput = document.getElementById('networkSearch');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        applyFilters();
+                    }
+                });
+            }
         });
     </script>
 </body>

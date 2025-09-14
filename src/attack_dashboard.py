@@ -4,6 +4,9 @@ import re
 import time
 import json
 import os
+import threading
+import logging
+from attacks import deauth_attack, handshake_capture, beacon_flood, attack_manager
 
 app = Flask(__name__)
 app.secret_key = 'netkrak_attack_2024'
@@ -12,46 +15,290 @@ app.secret_key = 'netkrak_attack_2024'
 is_attacking = False
 active_attacks = []
 attack_results = {}
+attack_threads = {}
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def add_log_entry(type, message):
     """Add log entry"""
     timestamp = time.strftime('%H:%M:%S')
     print(f"[{timestamp}] [{type.upper()}] {message}")
+    logger.info(f"[{type.upper()}] {message}")
 
-def execute_attack(target, attack_type):
-    """Execute network attack"""
-    global is_attacking
+def execute_attack(target, attack_type, interface='wlan0'):
+    """Execute REAL network attack"""
+    global is_attacking, active_attacks, attack_results, attack_threads
+    
     is_attacking = True
-    add_log_entry('info', f'Starting {attack_type} attack on {target.get("ssid", "Hidden")}')
+    attack_id = f"{attack_type}_{int(time.time())}"
     
-    # Simulate attack execution
-    time.sleep(2)
+    add_log_entry('info', f'Starting REAL {attack_type} attack on {target.get("ssid", "Hidden")} ({target.get("bssid", "Unknown")})')
     
-    # Mock attack results
-    result = {
-        'status': 'success',
-        'attack_type': attack_type,
-        'target': target,
-        'timestamp': time.time(),
-        'message': f'{attack_type} attack completed successfully'
+    # Create attack thread
+    def attack_worker():
+        global is_attacking, active_attacks, attack_results
+        
+        try:
+            result = {
+                'attack_id': attack_id,
+                'status': 'running',
+                'attack_type': attack_type,
+                'target': target,
+                'start_time': time.time(),
+                'interface': interface,
+                'message': f'{attack_type} attack in progress...'
+            }
+            
+            active_attacks.append(result)
+            attack_results[attack_id] = result
+            
+            # Execute REAL attack based on type
+            success = False
+            attack_message = ""
+            
+            if attack_type == 'deauth':
+                success = deauth_attack(
+                    interface=interface,
+                    target_bssid=target.get('bssid'),
+                    packet_count=50,
+                    dry_run=False,
+                    logger=logger
+                )
+                attack_message = f"Deauth attack {'completed successfully' if success else 'failed'}"
+                
+            elif attack_type == 'handshake_capture':
+                output_file = f"/tmp/handshake_{target.get('bssid', '').replace(':', '')}.pcap"
+                success = handshake_capture(
+                    interface=interface,
+                    target_bssid=target.get('bssid'),
+                    output_file=output_file,
+                    duration=60,
+                    logger=logger
+                )
+                attack_message = f"Handshake capture {'completed successfully' if success else 'failed'}"
+                
+            elif attack_type == 'beacon_flood':
+                success = beacon_flood(
+                    interface=interface,
+                    ssid=target.get('ssid', 'FakeAP'),
+                    packet_count=100,
+                    interval=0.1,
+                    logger=logger
+                )
+                attack_message = f"Beacon flood {'completed successfully' if success else 'failed'}"
+                
+            else:
+                attack_message = f"Unknown attack type: {attack_type}"
+                success = False
+            
+            # Update attack result
+            result.update({
+                'status': 'success' if success else 'failed',
+                'end_time': time.time(),
+                'duration': time.time() - result['start_time'],
+                'message': attack_message,
+                'success': success
+            })
+            
+            attack_results[attack_id] = result
+            
+            # Update active attacks list
+            for i, attack in enumerate(active_attacks):
+                if attack['attack_id'] == attack_id:
+                    active_attacks[i] = result
+                    break
+            
+            add_log_entry('success' if success else 'error', f'{attack_type} attack {attack_message}')
+            
+        except Exception as e:
+            error_result = {
+                'attack_id': attack_id,
+                'status': 'error',
+                'attack_type': attack_type,
+                'target': target,
+                'end_time': time.time(),
+                'duration': time.time() - time.time(),
+                'message': f'Attack failed: {str(e)}',
+                'success': False,
+                'error': str(e)
+            }
+            
+            attack_results[attack_id] = error_result
+            active_attacks.append(error_result)
+            
+            add_log_entry('error', f'{attack_type} attack failed: {str(e)}')
+            logger.error(f"Attack execution error: {e}")
+            
+        finally:
+            is_attacking = False
+            # Clean up thread reference
+            if attack_id in attack_threads:
+                del attack_threads[attack_id]
+    
+    # Start attack thread
+    thread = threading.Thread(target=attack_worker, daemon=True)
+    attack_threads[attack_id] = thread
+    thread.start()
+    
+    return {
+        'attack_id': attack_id,
+        'status': 'started',
+        'message': f'{attack_type} attack started'
     }
-    
-    active_attacks.append(result)
-    attack_results[attack_type] = result
-    
-    is_attacking = False
-    add_log_entry('success', f'{attack_type} attack completed')
-    return result
 
 def get_attack_stats():
     """Get attack statistics"""
     return {
         'total_attacks': len(active_attacks),
         'successful_attacks': len([a for a in active_attacks if a['status'] == 'success']),
-        'active_attacks': len([a for a in active_attacks if a['status'] == 'running']),
+        'failed_attacks': len([a for a in active_attacks if a['status'] == 'failed']),
+        'running_attacks': len([a for a in active_attacks if a['status'] == 'running']),
         'attack_types': list(set([a['attack_type'] for a in active_attacks])),
-        'last_attack': active_attacks[-1] if active_attacks else None
+        'last_attack': active_attacks[-1] if active_attacks else None,
+        'is_attacking': is_attacking,
+        'active_threads': len(attack_threads)
     }
+
+# API Endpoints for Attack Dashboard
+@app.route('/api/attack/execute', methods=['POST'])
+def api_execute_attack():
+    """Execute a real attack"""
+    try:
+        data = request.get_json()
+        target = data.get('target', {})
+        attack_type = data.get('attack_type')
+        interface = data.get('interface', 'wlan0')
+        
+        if not target or not attack_type:
+            return jsonify({'error': 'Target and attack_type required'}), 400
+        
+        # Validate attack type
+        valid_attacks = ['deauth', 'handshake_capture', 'beacon_flood']
+        if attack_type not in valid_attacks:
+            return jsonify({'error': f'Invalid attack type. Must be one of: {valid_attacks}'}), 400
+        
+        # Execute attack
+        result = execute_attack(target, attack_type, interface)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Attack started successfully',
+            'attack_id': result['attack_id'],
+            'status': result['status']
+        })
+        
+    except Exception as e:
+        logger.error(f"Attack execution API error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/attack/status', methods=['GET'])
+def api_attack_status():
+    """Get attack status"""
+    try:
+        attack_id = request.args.get('attack_id')
+        
+        if attack_id:
+            # Get specific attack status
+            if attack_id in attack_results:
+                return jsonify({
+                    'success': True,
+                    'attack': attack_results[attack_id]
+                })
+            else:
+                return jsonify({'error': 'Attack not found'}), 404
+        else:
+            # Get all attacks
+            return jsonify({
+                'success': True,
+                'attacks': active_attacks,
+                'stats': get_attack_stats()
+            })
+            
+    except Exception as e:
+        logger.error(f"Attack status API error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/attack/stop', methods=['POST'])
+def api_stop_attack():
+    """Stop an attack"""
+    try:
+        data = request.get_json()
+        attack_id = data.get('attack_id')
+        
+        if attack_id and attack_id in attack_threads:
+            # Stop specific attack
+            thread = attack_threads[attack_id]
+            if thread.is_alive():
+                # Update attack status to stopped
+                if attack_id in attack_results:
+                    attack_results[attack_id]['status'] = 'stopped'
+                    attack_results[attack_id]['message'] = 'Attack stopped by user'
+                
+                # Remove from active attacks
+                active_attacks[:] = [a for a in active_attacks if a.get('attack_id') != attack_id]
+                
+                del attack_threads[attack_id]
+                
+                add_log_entry('info', f'Attack {attack_id} stopped')
+                return jsonify({'success': True, 'message': 'Attack stopped'})
+            else:
+                return jsonify({'error': 'Attack not running'}), 400
+        else:
+            # Stop all attacks
+            for aid in list(attack_threads.keys()):
+                if aid in attack_results:
+                    attack_results[aid]['status'] = 'stopped'
+                    attack_results[aid]['message'] = 'Attack stopped by user'
+            
+            attack_threads.clear()
+            active_attacks.clear()
+            
+            add_log_entry('info', 'All attacks stopped')
+            return jsonify({'success': True, 'message': 'All attacks stopped'})
+            
+    except Exception as e:
+        logger.error(f"Stop attack API error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/attack/history', methods=['GET'])
+def api_attack_history():
+    """Get attack history"""
+    try:
+        limit = int(request.args.get('limit', 50))
+        
+        # Get recent attacks
+        recent_attacks = active_attacks[-limit:] if active_attacks else []
+        
+        return jsonify({
+            'success': True,
+            'attacks': recent_attacks,
+            'total': len(active_attacks)
+        })
+        
+    except Exception as e:
+        logger.error(f"Attack history API error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/attack/cleanup', methods=['POST'])
+def api_cleanup_attacks():
+    """Cleanup attack manager"""
+    try:
+        # Cleanup all processes
+        attack_manager.cleanup_all_processes()
+        
+        # Clear attack data
+        active_attacks.clear()
+        attack_results.clear()
+        attack_threads.clear()
+        
+        add_log_entry('info', 'Attack cleanup completed')
+        return jsonify({'success': True, 'message': 'Cleanup completed'})
+        
+    except Exception as e:
+        logger.error(f"Attack cleanup API error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/')
 def home():

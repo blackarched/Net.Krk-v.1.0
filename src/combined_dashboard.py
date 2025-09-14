@@ -43,7 +43,8 @@ def execute_attack(target, attack_type):
     
     try:
         # Import attack functions
-        from attacks import deauth_attack, handshake_capture, beacon_flood
+        from attacks import (deauth_attack, handshake_capture, beacon_flood, evil_twin_attack, 
+                           wps_attack, credential_capture, fragmentation_attack)
         
         success = False
         message = ""
@@ -75,6 +76,39 @@ def execute_attack(target, attack_type):
                 interval=0.1
             )
             message = f"Beacon flood {'completed successfully' if success else 'failed'}"
+            
+        elif attack_type == 'evil_twin':
+            success = evil_twin_attack(
+                interface='wlan0',
+                target_bssid=target.get('bssid'),
+                target_ssid=target.get('ssid', 'FakeAP'),
+                channel=target.get('channel', 6)
+            )
+            message = f"Evil twin attack {'completed successfully' if success else 'failed'}"
+            
+        elif attack_type == 'wps':
+            success = wps_attack(
+                interface='wlan0',
+                target_bssid=target.get('bssid'),
+                timeout=300
+            )
+            message = f"WPS attack {'completed successfully' if success else 'failed'}"
+            
+        elif attack_type == 'credential':
+            success = credential_capture(
+                interface='wlan0',
+                target_bssid=target.get('bssid'),
+                duration=300
+            )
+            message = f"Credential capture {'completed successfully' if success else 'failed'}"
+            
+        elif attack_type == 'fragmentation':
+            success = fragmentation_attack(
+                interface='wlan0',
+                target_bssid=target.get('bssid'),
+                timeout=300
+            )
+            message = f"Fragmentation attack {'completed successfully' if success else 'failed'}"
             
         else:
             message = f"Unknown attack type: {attack_type}"
@@ -1073,11 +1107,15 @@ def api_monitor_mode():
         
         # Simulate monitor mode toggle (since we don't have iwconfig/airmon-ng in this environment)
         # In a real environment, this would use the actual commands
-        add_log_entry('info', f'Simulating monitor mode toggle for {interface}')
+        add_log_entry('info', f'Checking monitor mode status for {interface}')
         
-        # For demo purposes, simulate success
-        import random
-        is_monitor = random.choice([True, False])
+        # Real monitor mode check
+        try:
+            import subprocess
+            result = subprocess.run(['iwconfig', interface], capture_output=True, text=True, timeout=5)
+            is_monitor = 'Mode:Monitor' in result.stdout
+        except:
+            is_monitor = False
         
         if is_monitor:
             add_log_entry('info', f'Monitor mode automatically disabled for {interface}')
